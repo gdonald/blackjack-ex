@@ -2,6 +2,12 @@
 
 *Console Blackjack in Elixir*
 
+#### Run tests
+
+```
+mix test
+```
+
 #### Build
 
 ```
