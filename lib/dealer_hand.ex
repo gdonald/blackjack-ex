@@ -1,5 +1,5 @@
 defmodule Blackjack.DealerHand do
-  defstruct hand: nil, hide_down_card: false
+  defstruct hand: nil, hide_down_card: true
 
   alias Blackjack.{Card, Hand}
 
