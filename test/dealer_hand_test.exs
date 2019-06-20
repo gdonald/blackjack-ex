@@ -1,6 +1,5 @@
 defmodule DealerHandTest do
   use ExUnit.Case
-
   alias Blackjack.{DealerHand, Card, Hand}
 
   describe "DealerHand.get_value/2" do

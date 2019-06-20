@@ -1,6 +1,5 @@
 defmodule HandTest do
   use ExUnit.Case
-
   alias Blackjack.Hand
 
   describe "Hand.final_count/2" do
