@@ -7,11 +7,11 @@ defmodule Blackjack.Card do
     Face.value(card)
   end
 
-  def is_ace(card) do
+  def is_ace?(card) do
     card.value == 0
   end
 
-  def is_ten(card) do
+  def is_ten?(card) do
     card.value > 8
   end
 

@@ -14,27 +14,27 @@ defmodule CardTest do
     end
   end
 
-  describe "Card.is_ace/1" do
+  describe "Card.is_ace?/1" do
     test "returns true" do
       card = %Card{value: 0, suit_value: 0}
-      assert Card.is_ace(card) == true
+      assert Card.is_ace?(card) == true
     end
 
     test "returns false" do
       card = %Card{value: 1, suit_value: 0}
-      assert Card.is_ace(card) == false
+      assert Card.is_ace?(card) == false
     end
   end
 
-  describe "Card.is_ten/1" do
+  describe "Card.is_ten?/1" do
     test "returns true" do
       card = %Card{value: 9, suit_value: 0}
-      assert Card.is_ten(card) == true
+      assert Card.is_ten?(card) == true
     end
 
     test "returns false" do
       card = %Card{value: 8, suit_value: 0}
-      assert Card.is_ten(card) == false
+      assert Card.is_ten?(card) == false
     end
   end
 

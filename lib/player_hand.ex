@@ -1,7 +1,7 @@
 defmodule Blackjack.PlayerHand do
-  defstruct hand: nil
+  defstruct hand: nil, played: false, payed: false, status: :unknown
 
-  alias Blackjack.{Card, Hand}
+  alias Blackjack.{Card, Game, Hand, PlayerHand}
 
   def get_value(player_hand, count_method) do
     total =
@@ -13,5 +13,24 @@ defmodule Blackjack.PlayerHand do
     if count_method == :soft && total > 21,
        do: get_value(player_hand, :hard),
        else: total
+  end
+
+  def is_done(game, player_hand) do
+    if player_hand.played
+       || player_hand.stood
+       || Hand.is_blackjack?(player_hand.hand)
+       || PlayerHand.is_busted?(player_hand)
+       || 21 == PlayerHand.get_value(player_hand, :soft)
+       || 21 == PlayerHand.get_value(player_hand, :hard) do
+      player_hand = %PlayerHand{player_hand | played: true}
+
+      if !player_hand.payed && PlayerHand.busted?(player_hand) do
+        player_hand = %PlayerHand{player_hand | payed: true, status: :lost}
+        game = %Game{game | money: game.money - player_hand.bet}
+        {true, game, player_hand}
+      end
+
+      {false, game, player_hand}
+    end
   end
 end
