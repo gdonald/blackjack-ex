@@ -9,7 +9,7 @@ defmodule Blackjack.Game do
 
   alias Blackjack.Game
 
-  def run(args \\ []) do
+  def run(_args \\ []) do
     game = %Game{}
     IO.inspect(game)
   end

@@ -2,10 +2,16 @@
 
 *Console Blackjack in Elixir*
 
+#### Install dependencies
+
+```
+mix deps.get
+```
+
 #### Run tests
 
 ```
-mix test
+mix espec
 ```
 
 #### Build

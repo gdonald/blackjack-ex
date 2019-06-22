@@ -1,5 +1,5 @@
 defmodule Blackjack.Card do
-  defstruct value: nil, suit_value: nil
+  defstruct value: nil, suit_value: 0
 
   alias Blackjack.Face
 

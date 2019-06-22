@@ -24,13 +24,17 @@ defmodule Blackjack.PlayerHand do
        || 21 == PlayerHand.get_value(player_hand, :hard) do
       player_hand = %PlayerHand{player_hand | played: true}
 
-      if !player_hand.payed && PlayerHand.busted?(player_hand) do
+      if !player_hand.payed && PlayerHand.is_busted?(player_hand) do
         player_hand = %PlayerHand{player_hand | payed: true, status: :lost}
         game = %Game{game | money: game.money - player_hand.bet}
         {true, game, player_hand}
+      else
+        {false, game, player_hand}
       end
-
-      {false, game, player_hand}
     end
+  end
+
+  def is_busted?(player_hand) do
+    get_value(player_hand, :soft) > 21
   end
 end
