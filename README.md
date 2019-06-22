@@ -8,11 +8,19 @@
 mix deps.get
 ```
 
-#### Run tests
+#### Run specs
 
 ```
 mix espec
 ```
+
+#### Run coverage
+
+```
+mix coveralls.html
+```
+
+Results will be in ./cover
 
 #### Build
 
