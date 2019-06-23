@@ -4,7 +4,7 @@ defmodule Blackjack.Shoe do
   alias Blackjack.{Card, Shoe}
 
   def shuffle_specs do
-    {
+    [
       {95, 8},
       {92, 7},
       {89, 6},
@@ -13,7 +13,7 @@ defmodule Blackjack.Shoe do
       {82, 3},
       {81, 2},
       {80, 1}
-    }
+    ]
   end
 
   def next_card(shoe) do
@@ -21,11 +21,22 @@ defmodule Blackjack.Shoe do
     {card, %Shoe{cards: cards}}
   end
 
-  def needs_to_shuffle(shoe) do
-    case length(shoe.cards) do
-      # TODO
-      _ ->
-        true
+  def used_cards_percent(shoe, game) do
+    total_cards = game.num_decks * 52
+    cards_dealt = total_cards - length(shoe.cards)
+    trunc(cards_dealt / total_cards * 100)
+  end
+
+  def needs_to_shuffle(shoe, game) do
+    if length(shoe.cards) == 0 do
+      true
+    else
+      used = Shoe.used_cards_percent(shoe, game)
+
+      Enum.reduce(Shoe.shuffle_specs(), [], fn ({percent, decks_count}, acc) ->
+        result = decks_count == game.num_decks && used > percent
+        if result, do: acc = acc ++ [result], else: acc
+      end) |> length > 0
     end
   end
 
