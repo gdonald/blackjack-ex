@@ -7,13 +7,14 @@ defmodule Blackjack.Hand do
     if length(hand.cards) != 2 do
       false
     else
-      {card_1, card_2} = hand.cards
+      [card_1, card_2] = hand.cards
       if Card.is_ace?(card_1) && Card.is_ten?(card_2)
          || Card.is_ace?(card_2) && Card.is_ten?(card_1) do
         true
+      else
+        false
       end
     end
-    false
   end
 
   def final_count(values, count_method) do

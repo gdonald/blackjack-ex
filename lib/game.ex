@@ -11,6 +11,5 @@ defmodule Blackjack.Game do
 
   def run(_args \\ []) do
     game = %Game{}
-    IO.inspect(game)
   end
 end

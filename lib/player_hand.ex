@@ -1,5 +1,5 @@
 defmodule Blackjack.PlayerHand do
-  defstruct hand: nil, played: false, payed: false, status: :unknown
+  defstruct hand: nil, bet: 500, played: false, payed: false, stood: false, status: :unknown
 
   alias Blackjack.{Card, Game, Hand, PlayerHand}
 
@@ -8,33 +8,44 @@ defmodule Blackjack.PlayerHand do
       Enum.map(
         player_hand.hand.cards,
         fn card -> Card.val(card) end
-      ) |> Hand.final_count(count_method)
+      )
+      |> Hand.final_count(count_method)
 
     if count_method == :soft && total > 21,
-       do: get_value(player_hand, :hard),
+       do: PlayerHand.get_value(player_hand, :hard),
        else: total
   end
 
-  def is_done(game, player_hand) do
-    if player_hand.played
-       || player_hand.stood
-       || Hand.is_blackjack?(player_hand.hand)
-       || PlayerHand.is_busted?(player_hand)
-       || 21 == PlayerHand.get_value(player_hand, :soft)
-       || 21 == PlayerHand.get_value(player_hand, :hard) do
-      player_hand = %PlayerHand{player_hand | played: true}
+  def is_played?(player_hand) do
+    player_hand.played
+    || player_hand.stood
+    || Hand.is_blackjack?(player_hand.hand)
+    || PlayerHand.is_busted?(player_hand)
+    || 21 == PlayerHand.get_value(player_hand, :soft)
+    || 21 == PlayerHand.get_value(player_hand, :hard)
+  end
 
-      if !player_hand.payed && PlayerHand.is_busted?(player_hand) do
-        player_hand = %PlayerHand{player_hand | payed: true, status: :lost}
-        game = %Game{game | money: game.money - player_hand.bet}
-        {true, game, player_hand}
-      else
-        {false, game, player_hand}
-      end
+  def handle_busted_hand!(player_hand, game) do
+    if PlayerHand.is_busted?(player_hand) do
+      player_hand = %PlayerHand{player_hand | payed: true, status: :lost}
+      game = %Game{game | money: game.money - player_hand.bet}
+      {player_hand, game}
+    else
+      {player_hand, game}
+    end
+  end
+
+  def is_done?(player_hand, game) do
+    if PlayerHand.is_played?(player_hand) do
+      player_hand = %PlayerHand{player_hand | played: true}
+      {player_hand, game} = PlayerHand.handle_busted_hand!(player_hand, game)
+      {true, player_hand, game}
+    else
+      {false, player_hand, game}
     end
   end
 
   def is_busted?(player_hand) do
-    get_value(player_hand, :soft) > 21
+    PlayerHand.get_value(player_hand, :soft) > 21
   end
 end

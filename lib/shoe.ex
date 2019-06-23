@@ -31,7 +31,7 @@ defmodule Blackjack.Shoe do
 
   def new(num_decks) do
     cards = new_regular(num_decks)
-    |> Enum.shuffle
+            |> Enum.shuffle
 
     %Shoe{cards: cards}
   end
