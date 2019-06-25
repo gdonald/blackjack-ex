@@ -15,4 +15,11 @@ defmodule FaceSpec do
              |> to(eq "🂠")
     end
   end
+
+  describe "Face.card_back/0" do
+    it "returns a card back" do
+      expect Face.card_back
+             |> to(eq "🂠")
+    end
+  end
 end

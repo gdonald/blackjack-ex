@@ -24,4 +24,10 @@ defmodule Blackjack.Face do
       |> elem(card.value)
       |> elem(card.suit_value)
   end
+
+  def card_back do
+    Face.values
+      |> elem(13)
+      |> elem(0)
+  end
 end

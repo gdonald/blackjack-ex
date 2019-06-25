@@ -150,16 +150,27 @@ defmodule PlayerHandSpec do
       hand = %Hand{cards: [eight(), eight()]}
       player_hand = %PlayerHand{hand: hand, played: true}
       {result, player_hand, _game} = PlayerHand.is_done?(player_hand, game())
-      expect result |> to(be_true())
-      expect player_hand.played |> to(be_true())
+      expect result
+             |> to(be_true())
+      expect player_hand.played
+             |> to(be_true())
     end
 
     it "returns false" do
       hand = %Hand{cards: [eight(), eight()]}
       player_hand = %PlayerHand{hand: hand, played: false}
       {result, player_hand, _game} = PlayerHand.is_done?(player_hand, game())
-      expect result |> to(be_false())
-      expect player_hand.played |> to(be_false())
+      expect result
+             |> to(be_false())
+      expect player_hand.played
+             |> to(be_false())
+    end
+  end
+
+  describe "PlayerHand.to_s/1" do
+    it "returns face for second card" do
+      expect PlayerHand.to_s(player_hand())
+             |> to(eq " 🂡 🂪 ⇒  21")
     end
   end
 end

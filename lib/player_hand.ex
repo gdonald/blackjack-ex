@@ -48,4 +48,17 @@ defmodule Blackjack.PlayerHand do
   def is_busted?(player_hand) do
     PlayerHand.get_value(player_hand, :soft) > 21
   end
+
+  def to_s(player_hand) do
+    cards = Enum.map(
+              player_hand.hand.cards,
+              fn card ->
+                Card.to_s(card)
+              end
+            )
+            |> Enum.join(" ")
+    value = PlayerHand.get_value(player_hand, :soft)
+
+    " #{cards} ⇒  #{value}"
+  end
 end
