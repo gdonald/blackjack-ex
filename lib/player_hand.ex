@@ -61,4 +61,19 @@ defmodule Blackjack.PlayerHand do
 
     " #{cards} ⇒  #{value}"
   end
+
+  def can_split?(player_hand, game) do
+    if player_hand.stood
+       || length(game.player_hands) >= Game.max_player_hands()
+       || game.money < Game.all_bets(game) + player_hand.bet do
+      false
+    else
+      if length(player_hand.hand.cards) == 2 do
+        [card_1, card_2] = player_hand.hand.cards
+        card_1.value == card_2.value
+      else
+        false
+      end
+    end
+  end
 end

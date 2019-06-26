@@ -12,4 +12,14 @@ defmodule Blackjack.Game do
   def run(_args \\ []) do
     game = %Game{}
   end
+
+  def max_player_hands do
+    7
+  end
+
+  def all_bets(game) do
+    Enum.reduce(game.player_hands, 0, fn player_hand, total ->
+      total + player_hand.bet
+    end)
+  end
 end
