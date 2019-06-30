@@ -1,6 +1,6 @@
 defmodule GameSpec do
   use ESpec
-  alias Blackjack.{Card, Game, Hand, PlayerHand}
+  alias Blackjack.{Card, DealerHand, Game, Hand, PlayerHand}
 
   let :seven, do: %Card{value: 6}
   let :ace, do: %Card{value: 0}
@@ -142,6 +142,19 @@ defmodule GameSpec do
         expect Game.needs_to_play_dealer_hand?(game())
                |> to(be_false())
       end
+    end
+  end
+
+  describe "Game.unhide_dealer_down_card!/1" do
+    let :dealer_hand, do: %DealerHand{hide_down_card: true}
+    let :game, do: %Game{dealer_hand: dealer_hand()}
+
+    it "flips dealer down card" do
+      expect game().dealer_hand.hide_down_card
+             |> to(be_true())
+      game = Game.unhide_dealer_down_card!(game())
+      expect game.dealer_hand.hide_down_card
+             |> to(be_false())
     end
   end
 end

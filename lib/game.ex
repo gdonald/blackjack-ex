@@ -7,7 +7,7 @@ defmodule Blackjack.Game do
             current_player_hand: 0,
             shoe: nil
 
-  alias Blackjack.{Hand, PlayerHand}
+  alias Blackjack.{DealerHand, Game, Hand, PlayerHand}
 
   def run(_args \\ []) do
     # game = %Game{}
@@ -34,14 +34,16 @@ defmodule Blackjack.Game do
   def needs_to_play_dealer_hand?(game) do
     Enum.reduce(game.player_hands, [], fn (player_hand, acc) ->
       result = !(PlayerHand.is_busted?(player_hand) || Hand.is_blackjack?(player_hand.hand))
-      if result, do: acc = acc ++ [result], else: acc
+      if result,
+         do: acc ++ [result],
+         else: acc
     end) |> length > 0
   end
 
-#  def unhide_dealer_down_card(game) do
-#    dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
-#    %Game{game | dealer_hand: dealer_hand}
-#  end
+  def unhide_dealer_down_card!(game) do
+    dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+    %Game{game | dealer_hand: dealer_hand}
+  end
 
 #  def deal_dealer_cards!(game) do
 #    soft_count = DealerHand.get_value(game.dealer_hand, :soft)
