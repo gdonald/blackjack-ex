@@ -374,4 +374,80 @@ defmodule PlayerHandSpec do
       end
     end
   end
+
+  describe "PlayerHand.can_hit?/1" do
+    context "a non-stood hand" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ten(), ten()]
+            }
+          }
+
+      it "can stand" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_true())
+      end
+    end
+
+    context "a stood hand" do
+      let :player_hand, do: %PlayerHand{stood: true}
+
+      it "cannot stand" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a played hand" do
+      let :player_hand, do: %PlayerHand{played: true}
+
+      it "cannot stand" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a hard 21" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ace(), ten(), ten()]
+            }
+          }
+
+      it "returns false" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a blackjack" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ace(), ten()]
+            }
+          }
+
+      it "returns false" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a busted hand" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ten(), ten(), ten()]
+            }
+          }
+
+      it "returns false" do
+        expect PlayerHand.can_hit?(player_hand())
+               |> to(be_false())
+      end
+    end
+  end
 end

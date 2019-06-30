@@ -89,4 +89,11 @@ defmodule Blackjack.PlayerHand do
       || PlayerHand.is_busted?(player_hand)
       || Hand.is_blackjack?(player_hand.hand))
   end
+
+  def can_hit?(player_hand) do
+    !(player_hand.stood || player_hand.played
+      || 21 == PlayerHand.get_value(player_hand, :hard)
+      || Hand.is_blackjack?(player_hand.hand)
+      || PlayerHand.is_busted?(player_hand))
+  end
 end
