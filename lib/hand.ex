@@ -1,7 +1,7 @@
 defmodule Blackjack.Hand do
   defstruct cards: []
 
-  alias Blackjack.Card
+  alias Blackjack.{Card, Hand, Shoe}
 
   def is_blackjack?(hand) do
     if length(hand.cards) != 2 do
@@ -26,4 +26,11 @@ defmodule Blackjack.Hand do
       end
     )
   end
+
+#  def deal_card!(hand, shoe) do
+#    {card, shoe} = Shoe.next_card(shoe)
+#    hand = %Hand{cards: hand.cards ++ [card]}
+#
+#    {hand, shoe}
+#  end
 end
