@@ -149,7 +149,7 @@ defmodule PlayerHandSpec do
     it "returns true" do
       hand = %Hand{cards: [eight(), eight()]}
       player_hand = %PlayerHand{hand: hand, played: true}
-      {result, player_hand, _game} = PlayerHand.is_done?(player_hand, game())
+      {result, player_hand, _game} = PlayerHand.is_done?(player_hand, %Game{})
       expect result
              |> to(be_true())
       expect player_hand.played
@@ -159,7 +159,7 @@ defmodule PlayerHandSpec do
     it "returns false" do
       hand = %Hand{cards: [eight(), eight()]}
       player_hand = %PlayerHand{hand: hand, played: false}
-      {result, player_hand, _game} = PlayerHand.is_done?(player_hand, game())
+      {result, player_hand, _game} = PlayerHand.is_done?(player_hand, %Game{})
       expect result
              |> to(be_false())
       expect player_hand.played
@@ -179,7 +179,7 @@ defmodule PlayerHandSpec do
       let :player_hand, do: %PlayerHand{stood: true}
 
       it "cannot split" do
-        expect PlayerHand.can_split?(player_hand(), game())
+        expect PlayerHand.can_split?(player_hand(), %Game{})
                |> to(be_false())
       end
     end
@@ -207,69 +207,54 @@ defmodule PlayerHandSpec do
     end
 
     context "cannot split a hand with different card values" do
-      let :game,
-          do: %Game{
-            player_hands: [
-              %PlayerHand{
-                hand: %Hand{
-                  cards: [ace(), ten()]
-                }
-              }
-            ]
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ace(), ten()]
+            }
           }
 
       it "returns false" do
-        [player_hand | _rest] = game().player_hands
-        expect PlayerHand.can_split?(player_hand, game())
+        expect PlayerHand.can_split?(player_hand(), %Game{})
                |> to(be_false())
       end
     end
 
     context "cannot split a hand with more than 2 cards" do
-      let :game,
-          do: %Game{
-            player_hands: [
-              %PlayerHand{
-                hand: %Hand{
-                  cards: [ace(), ace(), ten()]
-                }
-              }
-            ]
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ace(), ace(), ten()]
+            }
           }
 
       it "returns false" do
-        [player_hand | _rest] = game().player_hands
-        expect PlayerHand.can_split?(player_hand, game())
+        expect PlayerHand.can_split?(player_hand(), %Game{})
                |> to(be_false())
       end
     end
 
     context "can split a hand with matching card values" do
-      let :game,
-          do: %Game{
-            player_hands: [
-              %PlayerHand{
-                hand: %Hand{
-                  cards: [ten(), ten()]
-                }
-              }
-            ]
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ten(), ten()]
+            }
           }
 
       it "returns true" do
-        [player_hand | _rest] = game().player_hands
-        expect PlayerHand.can_split?(player_hand, game())
+        expect PlayerHand.can_split?(player_hand(), %Game{})
                |> to(be_true())
       end
     end
   end
 
-  describe "PlayerHand.can_double?" do
+  describe "PlayerHand.can_double?/2" do
     context "a stood hand" do
       let :player_hand, do: %PlayerHand{stood: true}
 
       it "cannot double" do
-        expect PlayerHand.can_double?(player_hand(), game())
+        expect PlayerHand.can_double?(player_hand(), %Game{})
                |> to(be_false())
       end
     end
@@ -333,6 +318,59 @@ defmodule PlayerHandSpec do
         [player_hand | _rest] = game().player_hands
         expect PlayerHand.can_double?(player_hand, game())
                |> to(be_true())
+      end
+    end
+  end
+
+  describe "PlayerHand.can_stand?/1" do
+    context "a non-stood hand" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ten(), ten()]
+            }
+          }
+
+      it "can stand" do
+        expect PlayerHand.can_stand?(player_hand())
+               |> to(be_true())
+      end
+    end
+
+    context "a stood hand" do
+      let :player_hand, do: %PlayerHand{stood: true}
+
+      it "cannot stand" do
+        expect PlayerHand.can_stand?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a busted hand" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ten(), ten(), ten()]
+            }
+          }
+
+      it "returns false" do
+        expect PlayerHand.can_stand?(player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "a blackjack" do
+      let :player_hand,
+          do: %PlayerHand{
+            hand: %Hand{
+              cards: [ace(), ten()]
+            }
+          }
+
+      it "returns false" do
+        expect PlayerHand.can_stand?(player_hand())
+               |> to(be_false())
       end
     end
   end

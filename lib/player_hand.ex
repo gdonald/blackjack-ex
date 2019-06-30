@@ -83,4 +83,10 @@ defmodule Blackjack.PlayerHand do
       || Hand.is_blackjack?(player_hand.hand)
       || game.money < Game.all_bets(game) + player_hand.bet)
   end
+
+  def can_stand?(player_hand) do
+    !(player_hand.stood
+      || PlayerHand.is_busted?(player_hand)
+      || Hand.is_blackjack?(player_hand.hand))
+  end
 end
