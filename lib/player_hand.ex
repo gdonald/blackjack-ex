@@ -76,4 +76,11 @@ defmodule Blackjack.PlayerHand do
       end
     end
   end
+
+  def can_double?(player_hand, game) do
+    !(player_hand.stood
+      || length(player_hand.hand.cards) != 2
+      || Hand.is_blackjack?(player_hand.hand)
+      || game.money < Game.all_bets(game) + player_hand.bet)
+  end
 end

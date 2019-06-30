@@ -263,4 +263,77 @@ defmodule PlayerHandSpec do
       end
     end
   end
+
+  describe "PlayerHand.can_double?" do
+    context "a stood hand" do
+      let :player_hand, do: %PlayerHand{stood: true}
+
+      it "cannot double" do
+        expect PlayerHand.can_double?(player_hand(), game())
+               |> to(be_false())
+      end
+    end
+
+    context "cannot double a hand with more than 2 cards" do
+      let :game,
+          do: %Game{
+            player_hands: [
+              %PlayerHand{
+                hand: %Hand{
+                  cards: [ace(), ace(), ten()]
+                }
+              }
+            ]
+          }
+
+      it "returns false" do
+        [player_hand | _rest] = game().player_hands
+        expect PlayerHand.can_double?(player_hand, game())
+               |> to(be_false())
+      end
+    end
+
+    context "cannot double a blackjack" do
+      let :game,
+          do: %Game{
+            player_hands: [
+              %PlayerHand{
+                hand: %Hand{
+                  cards: [ace(), ten()]
+                }
+              }
+            ]
+          }
+
+      it "returns false" do
+        [player_hand | _rest] = game().player_hands
+        expect PlayerHand.can_double?(player_hand, game())
+               |> to(be_false())
+      end
+    end
+
+    context "cannot double without enough money" do
+      let :game, do: %Game{money: 1499, player_hands: (for _ <- 1..2, do: %PlayerHand{hand: %Hand{
+        cards: [ace(), eight()]
+      }})}
+
+      it "returns false" do
+        [player_hand | _rest] = game().player_hands
+        expect PlayerHand.can_double?(player_hand, game())
+               |> to(be_false())
+      end
+    end
+
+    context "can double" do
+      let :game, do: %Game{money: 1500, player_hands: (for _ <- 1..2, do: %PlayerHand{hand: %Hand{
+        cards: [ace(), eight()]
+      }})}
+
+      it "returns true" do
+        [player_hand | _rest] = game().player_hands
+        expect PlayerHand.can_double?(player_hand, game())
+               |> to(be_true())
+      end
+    end
+  end
 end
