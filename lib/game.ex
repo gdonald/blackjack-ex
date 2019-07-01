@@ -50,9 +50,7 @@ defmodule Blackjack.Game do
 #    hard_count = DealerHand.get_value(game.dealer_hand, :hard)
 #
 #    if soft_count < 18 && hard_count < 17 do
-#      {dealer_hand, shoe} = DealerHand.deal_card!(game.dealer_hand, game.shoe)
-#      game = %Game{game | dealer_hand: dealer_hand, shoe: shoe}
-#
+#      game = DealerHand.deal_card!(game)
 #      Game.deal_dealer_cards!(game)
 #    else
 #      game

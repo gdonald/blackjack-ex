@@ -1,7 +1,7 @@
 defmodule Blackjack.DealerHand do
   defstruct hand: nil, hide_down_card: true
 
-  alias Blackjack.{Card, Face, DealerHand, Hand}
+  alias Blackjack.{Card, Face, Game, DealerHand, Hand}
 
   def get_value(dealer_hand, count_method) do
     total =
@@ -49,5 +49,12 @@ defmodule Blackjack.DealerHand do
     value = DealerHand.get_value(dealer_hand, :soft)
 
     " #{cards} ⇒  #{value}"
+  end
+
+  def deal_card!(game) do
+    {hand, shoe} = Hand.deal_card!(game.dealer_hand.hand, game.shoe)
+    dealer_hand = %DealerHand{game.dealer_hand | hand: hand}
+
+    %Game{game | dealer_hand: dealer_hand, shoe: shoe}
   end
 end

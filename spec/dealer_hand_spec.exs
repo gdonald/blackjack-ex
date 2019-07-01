@@ -1,6 +1,6 @@
 defmodule DealerHandSpec do
   use ESpec
-  alias Blackjack.{DealerHand, Card, Hand}
+  alias Blackjack.{DealerHand, Card, Game, Hand, Shoe}
 
   let :ace, do: %Card{value: 0}
   let :ten, do: %Card{value: 9}
@@ -176,6 +176,33 @@ defmodule DealerHandSpec do
         expect DealerHand.to_s(dealer_hand())
                |> to(eq " 🂪 🂡 ⇒  21")
       end
+    end
+  end
+
+  describe "DealerHand.deal_card!/1" do
+    let :shoe, do: %Shoe{cards: [ace(), ten()]}
+    let :hand, do: %Hand{}
+    let :dealer_hand, do: %DealerHand{hand: hand()}
+    let :game, do: %Game{shoe: shoe(), dealer_hand: dealer_hand()}
+
+    it "removes a shoe card and puts it in the hand" do
+      expect length(dealer_hand().hand.cards)
+             |> to(eq 0)
+      expect length(shoe().cards)
+             |> to(eq 2)
+
+      game = DealerHand.deal_card!(game())
+      expect length(game.dealer_hand.hand.cards)
+             |> to(eq 1)
+      expect length(game.shoe.cards)
+             |> to(eq 1)
+
+      [card | _rest] = game.dealer_hand.hand.cards
+      expect card
+             |> to(eq ace())
+      [card | _rest] = game.shoe.cards
+      expect card
+             |> to(eq ten())
     end
   end
 end
