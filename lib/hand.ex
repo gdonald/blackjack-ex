@@ -27,10 +27,10 @@ defmodule Blackjack.Hand do
     )
   end
 
-#  def deal_card!(hand, shoe) do
-#    {card, shoe} = Shoe.next_card(shoe)
-#    hand = %Hand{cards: hand.cards ++ [card]}
-#
-#    {hand, shoe}
-#  end
+  def deal_card!(hand, shoe) do
+    {card, shoe} = Shoe.next_card(shoe)
+    hand = %Hand{cards: hand.cards ++ [card]}
+
+    {hand, shoe}
+  end
 end
