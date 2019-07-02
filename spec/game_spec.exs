@@ -1,7 +1,8 @@
 defmodule GameSpec do
   use ESpec
-  alias Blackjack.{Card, DealerHand, Game, Hand, PlayerHand}
+  alias Blackjack.{Card, DealerHand, Game, Hand, PlayerHand, Shoe}
 
+  let :six, do: %Card{value: 5}
   let :seven, do: %Card{value: 6}
   let :ace, do: %Card{value: 0}
   let :ten, do: %Card{value: 9}
@@ -155,6 +156,66 @@ defmodule GameSpec do
       game = Game.unhide_dealer_down_card!(game())
       expect game.dealer_hand.hide_down_card
              |> to(be_false())
+    end
+  end
+
+  describe "Game.deal_dealer_cards!/1" do
+    let :shoe, do: %Shoe{cards: [ace()]}
+
+    context "soft 17" do
+      let :hand, do: %Hand{cards: [ace(), six()]}
+      let :dealer_hand, do: %DealerHand{hand: hand(), hide_down_card: false}
+      let :game, do: %Game{shoe: shoe(), dealer_hand: dealer_hand()}
+
+      it "takes a card" do
+        expect length(game().dealer_hand.hand.cards)
+               |> to(eq 2)
+        game = Game.deal_dealer_cards!(game())
+        expect length(game.dealer_hand.hand.cards)
+               |> to(eq 3)
+      end
+    end
+
+    context "soft 18" do
+      let :hand, do: %Hand{cards: [ace(), seven()]}
+      let :dealer_hand, do: %DealerHand{hand: hand(), hide_down_card: false}
+      let :game, do: %Game{shoe: shoe(), dealer_hand: dealer_hand()}
+
+      it "takes no cards" do
+        expect length(game().dealer_hand.hand.cards)
+               |> to(eq 2)
+        game = Game.deal_dealer_cards!(game())
+        expect length(game.dealer_hand.hand.cards)
+               |> to(eq 2)
+      end
+    end
+
+    context "hard 16" do
+      let :hand, do: %Hand{cards: [ten(), six()]}
+      let :dealer_hand, do: %DealerHand{hand: hand(), hide_down_card: false}
+      let :game, do: %Game{shoe: shoe(), dealer_hand: dealer_hand()}
+
+      it "takes a card" do
+        expect length(game().dealer_hand.hand.cards)
+               |> to(eq 2)
+        game = Game.deal_dealer_cards!(game())
+        expect length(game.dealer_hand.hand.cards)
+               |> to(eq 3)
+      end
+    end
+
+    context "hard 17" do
+      let :hand, do: %Hand{cards: [ten(), seven()]}
+      let :dealer_hand, do: %DealerHand{hand: hand(), hide_down_card: false}
+      let :game, do: %Game{shoe: shoe(), dealer_hand: dealer_hand()}
+
+      it "takes no cards" do
+        expect length(game().dealer_hand.hand.cards)
+               |> to(eq 2)
+        game = Game.deal_dealer_cards!(game())
+        expect length(game.dealer_hand.hand.cards)
+               |> to(eq 2)
+      end
     end
   end
 end

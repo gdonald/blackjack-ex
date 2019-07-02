@@ -45,17 +45,17 @@ defmodule Blackjack.Game do
     %Game{game | dealer_hand: dealer_hand}
   end
 
-#  def deal_dealer_cards!(game) do
-#    soft_count = DealerHand.get_value(game.dealer_hand, :soft)
-#    hard_count = DealerHand.get_value(game.dealer_hand, :hard)
-#
-#    if soft_count < 18 && hard_count < 17 do
-#      game = DealerHand.deal_card!(game)
-#      Game.deal_dealer_cards!(game)
-#    else
-#      game
-#    end
-#  end
+  def deal_dealer_cards!(game) do
+    soft_count = DealerHand.get_value(game.dealer_hand, :soft)
+    hard_count = DealerHand.get_value(game.dealer_hand, :hard)
+
+    if soft_count < 18 && hard_count < 17 do
+      game = DealerHand.deal_card!(game)
+      Game.deal_dealer_cards!(game)
+    else
+      game
+    end
+  end
 
 #  def play_dealer_hand!(game) do
 #    if Hand.is_blackjack?(game.dealer_hand.hand) do
