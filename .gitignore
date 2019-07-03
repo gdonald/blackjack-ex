@@ -24,3 +24,4 @@ blackjack-*.tar
 .idea
 blackjack.iml
 .DS_Store
+bj.txt

@@ -260,4 +260,28 @@ defmodule GameSpec do
       end
     end
   end
+
+  describe "Game.save_game!/1" do
+    let :game, do: %Game{}
+
+    it "persists a save game file to disk" do
+      Game.save_game!(game())
+      expect File.read!("bj.txt")
+             |> to(eq "1|10000|500")
+    end
+  end
+
+  describe "Game.load_game!/1" do
+    let :game, do: %Game{num_decks: 0, money: 0, current_bet: 0}
+
+    it "reads a persisted game file from disk" do
+      game = Game.load_game!(game())
+      expect game.num_decks
+             |> to(eq 1)
+      expect game.money
+             |> to(eq 10000)
+      expect game.current_bet
+             |> to(eq 500)
+    end
+  end
 end

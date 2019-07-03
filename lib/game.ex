@@ -7,7 +7,8 @@ defmodule Blackjack.Game do
             current_player_hand: 0,
             shoe: nil,
             min_bet: 500,
-            max_bet: 10000000
+            max_bet: 10000000,
+            save_file: "bj.txt"
 
   alias Blackjack.{DealerHand, Game, Hand, PlayerHand}
 
@@ -78,6 +79,22 @@ defmodule Blackjack.Game do
         end
       end
     end
+  end
+
+  def save_game!(game) do
+    data = "#{game.num_decks}|#{game.money}|#{game.current_bet}"
+    File.write(game.save_file, data)
+  end
+
+  def load_game!(game) do
+    [num_decks, money, current_bet] = File.read!(game.save_file)
+                                      |> String.split("|")
+    %Game{
+      game |
+      num_decks: String.to_integer(num_decks),
+      money: String.to_integer(money),
+      current_bet: String.to_integer(current_bet)
+    }
   end
 
   #  def pay_hands!(game) do
