@@ -218,4 +218,46 @@ defmodule GameSpec do
       end
     end
   end
+
+  describe "Game.normalize_current_bet!/1" do
+    context "current bet has sufficient money and is in range" do
+      let :game, do: %Game{current_bet: 500}
+
+      it "does not alter the current bet" do
+        game = Game.normalize_current_bet!(game())
+        expect game.current_bet
+               |> to(eq 500)
+      end
+    end
+
+    context "current bet has insufficient money" do
+      let :game, do: %Game{current_bet: 10500}
+
+      it "alters the current bet" do
+        game = Game.normalize_current_bet!(game())
+        expect game.current_bet
+               |> to(eq 10000)
+      end
+    end
+
+    context "current bet is more than max bet" do
+      let :game, do: %Game{money: 10000000, current_bet: 10000500}
+
+      it "alters the current bet" do
+        game = Game.normalize_current_bet!(game())
+        expect game.current_bet
+               |> to(eq 10000000)
+      end
+    end
+
+    context "current bet is less than min bet" do
+      let :game, do: %Game{current_bet: 499}
+
+      it "alters the current bet" do
+        game = Game.normalize_current_bet!(game())
+        expect game.current_bet
+               |> to(eq 500)
+      end
+    end
+  end
 end

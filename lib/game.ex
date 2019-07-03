@@ -5,7 +5,9 @@ defmodule Blackjack.Game do
             dealer_hand: nil,
             player_hands: [],
             current_player_hand: 0,
-            shoe: nil
+            shoe: nil,
+            min_bet: 500,
+            max_bet: 10000000
 
   alias Blackjack.{DealerHand, Game, Hand, PlayerHand}
 
@@ -32,12 +34,17 @@ defmodule Blackjack.Game do
   end
 
   def needs_to_play_dealer_hand?(game) do
-    Enum.reduce(game.player_hands, [], fn (player_hand, acc) ->
-      result = !(PlayerHand.is_busted?(player_hand) || Hand.is_blackjack?(player_hand.hand))
-      if result,
-         do: acc ++ [result],
-         else: acc
-    end) |> length > 0
+    Enum.reduce(
+      game.player_hands,
+      [],
+      fn (player_hand, acc) ->
+        result = !(PlayerHand.is_busted?(player_hand) || Hand.is_blackjack?(player_hand.hand))
+        if result,
+           do: acc ++ [result],
+           else: acc
+      end
+    )
+    |> length > 0
   end
 
   def unhide_dealer_down_card!(game) do
@@ -57,36 +64,90 @@ defmodule Blackjack.Game do
     end
   end
 
-#  def play_dealer_hand!(game) do
-#    if Hand.is_blackjack?(game.dealer_hand.hand) do
-#      game = Game.unhide_dealer_down_card(game)
-#    else
-#      if Game.needs_to_play_dealer_hand?(game) do
-#        game = Game.unhide_dealer_down_card(game)
-#        game = Game.deal_dealer_cards!(game)
-#      end
-#    end
-#
-#    dealer_hand = %DealerHand{game.dealer_hand | played: true}
-#    game = %Game{game | dealer_hand: dealer_hand}
-#
-#    Game.pay_hands!(game)
-#  end
+  def normalize_current_bet!(game) do
+    if game.current_bet < game.min_bet do
+      %Game{game | current_bet: game.min_bet}
+    else
+      if game.current_bet > game.max_bet do
+        %Game{game | current_bet: game.max_bet}
+      else
+        if game.current_bet > game.money do
+          %Game{game | current_bet: game.money}
+        else
+          game
+        end
+      end
+    end
+  end
 
-#  def play_more_hands!(game) do
-#
-#  end
+  #  def pay_hands!(game) do
+  #    dealer_hand_value = DealerHand.get_value(game.dealer_hand, :soft)
+  #    dealer_hand_busted = DealerHand.is_busted?(game.dealer_hand)
+  #
+  #    player_hands = Enum.reduce(
+  #      game.player_hands,
+  #      [],
+  #      fn player_hand ->
+  #        if !player_hand.payed do
+  #          player_hand = %PlayerHand{player_hand | payed: true}
+  #          player_hand_value = PlayerHand.get_value(player_hand, :soft)
+  #
+  #          cond do
+  #            dealer_hand_busted || player_hand_value > dealer_hand_value ->
+  #              if Hand.is_blackjack?(player_hand.hand) do
+  #                player_hand = %PlayerHand{player_hand | bet: player_hand.bet * 1.5}
+  #              end
+  #
+  #              game = %Game{game | money: game.money + player_hand.bet}
+  #              player_hand = %PlayerHand{player_hand | status: :won}
+  #
+  #            player_hand_value < dealer_hand_value ->
+  #              game = %Game{game | money: game.money - player_hand.bet}
+  #              player_hand = %PlayerHand{player_hand | status: :lost}
+  #
+  #            true ->
+  #              player_hand = %PlayerHand{player_hand | status: :push}
+  #          end
+  #        end
+  #      end
+  #    )
+  #
+  #    game = %Game{game | player_hands: player_hands}
+  #    game = Game.normalize_current_bet!(game)
+  #
+  #    Game.save_game!(game)
+  #  end
 
-#  def to_s(game) do
-#
-#  end
+  #  def play_dealer_hand!(game) do
+  #    if Hand.is_blackjack?(game.dealer_hand.hand) do
+  #      game = Game.unhide_dealer_down_card(game)
+  #    else
+  #      if Game.needs_to_play_dealer_hand?(game) do
+  #        game = Game.unhide_dealer_down_card(game)
+  #        game = Game.deal_dealer_cards!(game)
+  #      end
+  #    end
+  #
+  #    dealer_hand = %DealerHand{game.dealer_hand | played: true}
+  #    game = %Game{game | dealer_hand: dealer_hand}
+  #
+  #    Game.pay_hands!(game)
+  #  end
 
-#  def draw_hands(game) do
-#
-#  end
+  #  def play_more_hands!(game) do
+  #
+  #  end
 
-#  def draw_bet_options(game) do
-#
-#  end
+  #  def to_s(game) do
+  #
+  #  end
+
+  #  def draw_hands(game) do
+  #
+  #  end
+
+  #  def draw_bet_options(game) do
+  #
+  #  end
 
 end
