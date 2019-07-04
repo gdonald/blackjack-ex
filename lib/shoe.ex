@@ -35,7 +35,7 @@ defmodule Blackjack.Shoe do
 
       Enum.reduce(Shoe.shuffle_specs(), [], fn ({percent, decks_count}, acc) ->
         result = decks_count == game.num_decks && used > percent
-        if result, do: acc = acc ++ [result], else: acc
+        if result, do: acc ++ [result], else: acc
       end) |> length > 0
     end
   end

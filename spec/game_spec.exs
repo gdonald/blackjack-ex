@@ -130,15 +130,43 @@ defmodule GameSpec do
   end
 
   describe "Game.unhide_dealer_down_card!/1" do
-    let :dealer_hand, do: %DealerHand{hide_down_card: true}
+    let :dealer_hand, do: %DealerHand{hand: hand_A_10(), hide_down_card: true}
     let :game, do: %Game{dealer_hand: dealer_hand()}
 
-    it "flips dealer down card" do
-      expect game().dealer_hand.hide_down_card
-             |> to(be_true())
-      game = Game.unhide_dealer_down_card!(game())
-      expect game.dealer_hand.hide_down_card
-             |> to(be_false())
+    context "dealer hand is blackjack" do
+      it "flips dealer down card" do
+        expect game().dealer_hand.hide_down_card
+               |> to(be_true())
+        game = Game.unhide_dealer_down_card!(game())
+        expect game.dealer_hand.hide_down_card
+               |> to(be_false())
+      end
+    end
+
+    context "dealer hand needs to be played" do
+      let :dealer_hand, do: %DealerHand{hand: hand_10_6(), hide_down_card: true}
+      let :game, do: %Game{dealer_hand: dealer_hand(), player_hands: [player_hand_7_7()]}
+
+      it "flips dealer down card" do
+        expect game().dealer_hand.hide_down_card
+               |> to(be_true())
+        game = Game.unhide_dealer_down_card!(game())
+        expect game.dealer_hand.hide_down_card
+               |> to(be_false())
+      end
+    end
+
+    context "dealer hand does not need to be played and not blackjack" do
+      let :dealer_hand, do: %DealerHand{hand: hand_10_8(), hide_down_card: true}
+      let :game, do: %Game{dealer_hand: dealer_hand(), player_hands: [player_hand_10_10_10()]}
+
+      it "does not flip dealer down card" do
+        expect game().dealer_hand.hide_down_card
+               |> to(be_true())
+        game = Game.unhide_dealer_down_card!(game())
+        expect game.dealer_hand.hide_down_card
+               |> to(be_true())
+      end
     end
   end
 
@@ -293,6 +321,19 @@ defmodule GameSpec do
         expect game.money
                |> to(eq 11000)
       end
+    end
+  end
+
+  describe "Game.play_dealer_hand!/1" do
+    let :shoe, do: %Shoe{cards: [ace()]}
+    let :game, do: %Game{shoe: shoe(),
+      dealer_hand: dealer_hand_10_6(),
+      player_hands: [player_hand_10_9()]}
+
+    it "playes the dealer hand" do
+      game = Game.play_dealer_hand!(game())
+      expect game.money
+             |> to(eq 10500)
     end
   end
 end

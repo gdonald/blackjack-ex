@@ -48,23 +48,6 @@ defmodule Blackjack.Game do
     |> length > 0
   end
 
-  def unhide_dealer_down_card!(game) do
-    dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
-    %Game{game | dealer_hand: dealer_hand}
-  end
-
-  def deal_dealer_cards!(game) do
-    soft_count = DealerHand.get_value(game.dealer_hand, :soft)
-    hard_count = DealerHand.get_value(game.dealer_hand, :hard)
-
-    if soft_count < 18 && hard_count < 17 do
-      game = DealerHand.deal_card!(game)
-      Game.deal_dealer_cards!(game)
-    else
-      game
-    end
-  end
-
   def normalize_current_bet!(game) do
     if game.current_bet < game.min_bet do
       %Game{game | current_bet: game.min_bet}
@@ -131,21 +114,33 @@ defmodule Blackjack.Game do
     |> Game.save_game!
   end
 
-  #  def play_dealer_hand!(game) do
-  #    if Hand.is_blackjack?(game.dealer_hand.hand) do
-  #      game = Game.unhide_dealer_down_card(game)
-  #    else
-  #      if Game.needs_to_play_dealer_hand?(game) do
-  #        game = Game.unhide_dealer_down_card(game)
-  #        game = Game.deal_dealer_cards!(game)
-  #      end
-  #    end
-  #
-  #    dealer_hand = %DealerHand{game.dealer_hand | played: true}
-  #    game = %Game{game | dealer_hand: dealer_hand}
-  #
-  #    Game.pay_hands!(game)
-  #  end
+  def unhide_dealer_down_card!(game) do
+    if Hand.is_blackjack?(game.dealer_hand.hand)
+       || Game.needs_to_play_dealer_hand?(game) do
+      dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+      %Game{game | dealer_hand: dealer_hand}
+    else
+      game
+    end
+  end
+
+  def deal_dealer_cards!(game) do
+    soft_count = DealerHand.get_value(game.dealer_hand, :soft)
+    hard_count = DealerHand.get_value(game.dealer_hand, :hard)
+
+    if soft_count < 18 && hard_count < 17 do
+      game = DealerHand.deal_card!(game)
+      Game.deal_dealer_cards!(game)
+    else
+      game
+    end
+  end
+
+  def play_dealer_hand!(game) do
+    Game.unhide_dealer_down_card!(game)
+    |> Game.deal_dealer_cards!
+    |> Game.pay_player_hands!
+  end
 
   #  def play_more_hands!(game) do
   #
