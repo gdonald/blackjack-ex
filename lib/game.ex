@@ -84,6 +84,7 @@ defmodule Blackjack.Game do
   def save_game!(game) do
     data = "#{game.num_decks}|#{game.money}|#{game.current_bet}"
     File.write(game.save_file, data)
+    game
   end
 
   def load_game!(game) do
@@ -97,43 +98,38 @@ defmodule Blackjack.Game do
     }
   end
 
-  #  def pay_hands!(game) do
-  #    dealer_hand_value = DealerHand.get_value(game.dealer_hand, :soft)
-  #    dealer_hand_busted = DealerHand.is_busted?(game.dealer_hand)
-  #
-  #    player_hands = Enum.reduce(
-  #      game.player_hands,
-  #      [],
-  #      fn player_hand ->
-  #        if !player_hand.payed do
-  #          player_hand = %PlayerHand{player_hand | payed: true}
-  #          player_hand_value = PlayerHand.get_value(player_hand, :soft)
-  #
-  #          cond do
-  #            dealer_hand_busted || player_hand_value > dealer_hand_value ->
-  #              if Hand.is_blackjack?(player_hand.hand) do
-  #                player_hand = %PlayerHand{player_hand | bet: player_hand.bet * 1.5}
-  #              end
-  #
-  #              game = %Game{game | money: game.money + player_hand.bet}
-  #              player_hand = %PlayerHand{player_hand | status: :won}
-  #
-  #            player_hand_value < dealer_hand_value ->
-  #              game = %Game{game | money: game.money - player_hand.bet}
-  #              player_hand = %PlayerHand{player_hand | status: :lost}
-  #
-  #            true ->
-  #              player_hand = %PlayerHand{player_hand | status: :push}
-  #          end
-  #        end
-  #      end
-  #    )
-  #
-  #    game = %Game{game | player_hands: player_hands}
-  #    game = Game.normalize_current_bet!(game)
-  #
-  #    Game.save_game!(game)
-  #  end
+  def pay_player_hands!(game) do
+    dhv = DealerHand.get_value(game.dealer_hand, :soft)
+    dhb = DealerHand.is_busted?(game.dealer_hand)
+
+    results = Enum.reduce(
+      game.player_hands,
+      [],
+      fn (player_hand, acc) ->
+        acc ++ [PlayerHand.pay!(player_hand, dhv, dhb)]
+      end
+    )
+
+    money = Enum.reduce(
+      results,
+      0,
+      fn ({_, result}, acc) ->
+        acc + result
+      end
+    )
+
+    player_hands = Enum.reduce(
+      results,
+      [],
+      fn ({player_hand, _}, acc) ->
+        acc ++ [player_hand]
+      end
+    )
+
+    %Game{game | money: game.money + money, player_hands: player_hands}
+    |> Game.normalize_current_bet!
+    |> Game.save_game!
+  end
 
   #  def play_dealer_hand!(game) do
   #    if Hand.is_blackjack?(game.dealer_hand.hand) do

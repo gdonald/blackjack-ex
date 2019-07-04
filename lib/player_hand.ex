@@ -97,30 +97,56 @@ defmodule Blackjack.PlayerHand do
       || PlayerHand.is_busted?(player_hand))
   end
 
-#  def process() do
-#    if Game.more_hands_to_play?(game) do
-#      Game.play_more_hands!(game)
-#    else
-#      Game.play_dealer_hand!(game)
-#      Game.draw_hands(game)
-#      Game.draw_bet_options(game)
-#    end
-#  end
-#
-#  def hit!(player_hand, game) do
-#    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
-#    player_hand = %PlayerHand{player_hand | hand: hand}
-#    game = %Game{game | shoe: shoe}
-#
-#    if PlayerHand.is_done?(player_hand, game) do
-#      PlayerHand.process(game)
-#    else
-#      Game.draw_hands(game)
-#    end
-#
-#    {player_hand, game}
-#
-#    # TODO: Move to the hit! caller
-#    # game->playerHands.at(game->currentPlayerHand).getAction();
-#  end
+  def promoted_bet(player_hand) do
+    if Hand.is_blackjack?(player_hand.hand) do
+      player_hand.bet * 1.5
+    else
+      player_hand.bet
+    end
+  end
+
+  def pay!(player_hand, dhv, dhb) do
+    if player_hand.payed do
+      {player_hand, 0}
+    else
+      phv = PlayerHand.get_value(player_hand, :soft)
+      if dhb || phv > dhv do
+        bet = PlayerHand.promoted_bet(player_hand)
+        {%PlayerHand{player_hand | payed: true, status: :won, bet: bet}, bet}
+      else
+        if phv < dhv do
+          {%PlayerHand{player_hand | payed: true, status: :lost}, -player_hand.bet}
+        else
+          {%PlayerHand{player_hand | payed: true, status: :push}, 0}
+        end
+      end
+    end
+  end
+
+  #  def process() do
+  #    if Game.more_hands_to_play?(game) do
+  #      Game.play_more_hands!(game)
+  #    else
+  #      Game.play_dealer_hand!(game)
+  #      Game.draw_hands(game)
+  #      Game.draw_bet_options(game)
+  #    end
+  #  end
+  #
+  #  def hit!(player_hand, game) do
+  #    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
+  #    player_hand = %PlayerHand{player_hand | hand: hand}
+  #    game = %Game{game | shoe: shoe}
+  #
+  #    if PlayerHand.is_done?(player_hand, game) do
+  #      PlayerHand.process(game)
+  #    else
+  #      Game.draw_hands(game)
+  #    end
+  #
+  #    {player_hand, game}
+  #
+  #    # TODO: Move to the hit! caller
+  #    # game->playerHands.at(game->currentPlayerHand).getAction();
+  #  end
 end
