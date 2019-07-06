@@ -123,15 +123,15 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  #  def process() do
-  #    if Game.more_hands_to_play?(game) do
-  #      Game.play_more_hands!(game)
-  #    else
-  #      Game.play_dealer_hand!(game)
-  #      Game.draw_hands(game)
-  #      Game.draw_bet_options(game)
-  #    end
-  #  end
+#  def process(player_hand, game) do
+#    if Game.more_hands_to_play?(game) do
+#      Game.play_more_hands!(game)
+#    else
+#      Game.play_dealer_hand!(game)
+#      Game.draw_hands(game)
+#      Game.draw_bet_options(game)
+#    end
+#  end
   #
   #  def hit!(player_hand, game) do
   #    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)

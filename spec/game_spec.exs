@@ -336,4 +336,33 @@ defmodule GameSpec do
              |> to(eq 10500)
     end
   end
+
+  describe "Game.clear/1" do
+    it "outputs escape sequences to clear terminal" do
+      expect capture_io(
+               fn ->
+                 Game.clear(%Game{})
+               end
+             )
+             |> to(eq "\e[H\e[2J\n")
+    end
+  end
+
+  describe "Game.draw_hands/1" do
+    let :game, do: %Game{
+      dealer_hand: dealer_hand_10_6(),
+      player_hands: [player_hand_10_9(), player_hand_A_10()]}
+
+    it "draw dealer and player hands" do
+      expected = "\e[H\e[2J\n\n Dealer:\n\n\n Player $100.0:\n\n 🂩 🂪 ⇒  19 🂡 🂪 ⇒  21\n"
+      expect capture_io(
+               fn ->
+                 Game.draw_hands(game())
+               end
+             )
+             |> to(eq expected)
+    end
+  end
+
+
 end

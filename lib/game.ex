@@ -137,25 +137,76 @@ defmodule Blackjack.Game do
   end
 
   def play_dealer_hand!(game) do
-    Game.unhide_dealer_down_card!(game)
+    game
+    |> Game.unhide_dealer_down_card!
     |> Game.deal_dealer_cards!
     |> Game.pay_player_hands!
   end
 
-  #  def play_more_hands!(game) do
-  #
-  #  end
+  def clear(game) do
+    # \e[H - reset
+    # \e[2J - clear
+    IO.puts("\e[H\e[2J")
+    game
+  end
 
-  #  def to_s(game) do
-  #
-  #  end
+  def draw_hands(game) do
+    Game.clear(game)
 
-  #  def draw_hands(game) do
-  #
-  #  end
+    IO.puts("\n Dealer:\n")
+    DealerHand.to_s(game.dealer_hand)
+
+    IO.puts("\n Player $#{game.money / 100.0}:\n")
+    IO.puts(
+      Enum.reduce(
+        game.player_hands,
+        "",
+        fn (player_hand, acc) ->
+          acc <> PlayerHand.to_s(player_hand)
+        end
+      )
+    )
+
+    game
+  end
 
   #  def draw_bet_options(game) do
+  #    IO.puts " (D) Deal Hand  (B) Change Bet  (O) Options  (Q) Quit"
   #
+  #    char = IO.getn("", 1)
+  #    cond do
+  #      char == "d" ->
+  #        Game.deal_new_hand(game)
+  #      char == "b" ->
+  #        Game.get_new_bet(game)
+  #      char == "o" ->
+  #        Game.draw_game_options(game)
+  #      char == "q" ->
+  #        Game.clear(game)
+  #      true ->
+  #        Game.clear(game)
+  #        |> Game.draw_hands
+  #        |> Game.draw_bet_options
+  #    end
   #  end
 
+  #  def play_more_hands!(game) do
+  #    game = %Game{game | current_player_hand: game.current_player_hand + 1}
+  #
+  #    player_hand = game.player_hands
+  #                  |> elem(game.current_player_hand)
+  #
+  #    {hand, shoe} = Hand.deal_card!(player_hand, game.shoe)
+  #    player_hand = %PlayerHand{player_hand | hand: hand}
+  #    player_hands = List.replace_at(game.player_hands, game.current_player_hand, player_hand)
+  #
+  #    game = %Game{game | shoe: shoe, player_hands: player_hands}
+  #
+  #    if PlayerHand.is_done?(player_hand) do
+  #      PlayerHand.process!(player_hand, game)
+  #    else
+  #      Game.draw_hands(game)
+  #      PlayerHand.get_action(player_hand)
+  #    end
+  #  end
 end
