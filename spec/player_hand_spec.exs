@@ -242,13 +242,6 @@ defmodule PlayerHandSpec do
     end
   end
 
-  describe "PlayerHand.to_s/1" do
-    it "returns face for second card" do
-      expect PlayerHand.to_s(player_hand_A_10())
-             |> to(eq " 🂡 🂪 ⇒  21")
-    end
-  end
-
   describe "PlayerHand.can_split?/2" do
     context "a stood hand" do
       let :player_hand, do: %PlayerHand{stood: true}
@@ -429,6 +422,91 @@ defmodule PlayerHandSpec do
         expect PlayerHand.can_hit?(player_hand_10_10_10())
                |> to(be_false())
       end
+    end
+  end
+
+  describe "PlayerHand.get_sign/1" do
+    it "returns a minus" do
+      expect PlayerHand.get_sign(%PlayerHand{status: :lost})
+             |> to(eq "-")
+    end
+
+    it "returns a plus" do
+      expect PlayerHand.get_sign(%PlayerHand{status: :won})
+             |> to(eq "+")
+    end
+
+    it "returns an empty string" do
+      expect PlayerHand.get_sign(%PlayerHand{})
+             |> to(eq "")
+    end
+  end
+
+  describe "PlayerHand.get_bet/1" do
+    it "returns the bet as a formatted string" do
+      expect PlayerHand.get_bet(%PlayerHand{})
+             |> to(eq "$5.00")
+    end
+  end
+
+  describe "PlayerHand.get_arrow/3" do
+    it "returns an arrow" do
+      expect PlayerHand.get_arrow(%PlayerHand{}, 0, %Game{})
+             |> to(eq " ⇐")
+    end
+
+    it "returns an empty string for non-current index" do
+      expect PlayerHand.get_arrow(%PlayerHand{}, 1, %Game{})
+             |> to(eq "")
+    end
+
+    it "returns an empty string for non-current hand" do
+      expect PlayerHand.get_arrow(%PlayerHand{}, 0, %Game{current_player_hand: 1})
+             |> to(eq "")
+    end
+
+    it "returns an empty string for played hand" do
+      expect PlayerHand.get_arrow(%PlayerHand{played: true}, 0, %Game{})
+             |> to(eq "")
+    end
+  end
+
+  describe "PlayerHand.get_status/1" do
+    it "returns Busted!" do
+      player_hand = %PlayerHand{hand: hand_10_10_10(), status: :lost}
+      expect PlayerHand.get_status(player_hand)
+             |> to(eq "Busted!")
+    end
+
+    it "returns Lose!" do
+      player_hand = %PlayerHand{hand: hand_10_10(), status: :lost}
+      expect PlayerHand.get_status(player_hand)
+             |> to(eq "Lose!")
+    end
+
+    it "returns Blackjack!" do
+      player_hand = %PlayerHand{hand: hand_A_10(), status: :won}
+      expect PlayerHand.get_status(player_hand)
+             |> to(eq "Blackjack!")
+    end
+
+    it "returns Won!" do
+      player_hand = %PlayerHand{hand: hand_10_10(), status: :won}
+      expect PlayerHand.get_status(player_hand)
+             |> to(eq "Won!")
+    end
+
+    it "returns Push" do
+      player_hand = %PlayerHand{status: :push}
+      expect PlayerHand.get_status(player_hand)
+             |> to(eq "Push")
+    end
+  end
+
+  describe "PlayerHand.to_s/3" do
+    it "returns player hand as a string" do
+      expect PlayerHand.to_s(player_hand_A_10(), 0, %Game{})
+             |> to(eq " 🂡 🂪 ⇒  21  $5.00 ⇐  \n")
     end
   end
 end

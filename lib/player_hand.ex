@@ -49,7 +49,52 @@ defmodule Blackjack.PlayerHand do
     PlayerHand.get_value(player_hand, :soft) > 21
   end
 
-  def to_s(player_hand) do
+  def get_sign(player_hand) do
+    cond do
+      player_hand.status == :lost ->
+        "-"
+      player_hand.status == :won ->
+        "+"
+      true ->
+        ""
+    end
+  end
+
+  def get_bet(player_hand) do
+    "$#{Game.format_money(player_hand.bet / 100.0)}"
+  end
+
+  def get_arrow(player_hand, index, game) do
+    if !player_hand.played && index == game.current_player_hand do
+      " ⇐"
+    else
+      ""
+    end
+  end
+
+  def get_status(player_hand) do
+    if player_hand.status == :lost do
+      if PlayerHand.is_busted?(player_hand) do
+        "Busted!"
+      else
+        "Lose!"
+      end
+    else
+      if player_hand.status == :won do
+        if Hand.is_blackjack?(player_hand.hand) do
+          "Blackjack!"
+        else
+          "Won!"
+        end
+      else
+        if player_hand.status == :push do
+          "Push"
+        end
+      end
+    end
+  end
+
+  def to_s(player_hand, index, game) do
     cards = Enum.map(
               player_hand.hand.cards,
               fn card ->
@@ -58,8 +103,12 @@ defmodule Blackjack.PlayerHand do
             )
             |> Enum.join(" ")
     value = PlayerHand.get_value(player_hand, :soft)
+    sign = PlayerHand.get_sign(player_hand)
+    bet = PlayerHand.get_bet(player_hand)
+    arrow = PlayerHand.get_arrow(player_hand, index, game)
+    status = PlayerHand.get_status(player_hand)
 
-    " #{cards} ⇒  #{value}"
+    " #{cards} ⇒  #{value}  #{sign}#{bet}#{arrow}  #{status}\n"
   end
 
   def can_split?(player_hand, game) do
@@ -123,15 +172,15 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-#  def process(player_hand, game) do
-#    if Game.more_hands_to_play?(game) do
-#      Game.play_more_hands!(game)
-#    else
-#      Game.play_dealer_hand!(game)
-#      Game.draw_hands(game)
-#      Game.draw_bet_options(game)
-#    end
-#  end
+  #  def process(player_hand, game) do
+  #    if Game.more_hands_to_play?(game) do
+  #      Game.play_more_hands!(game)
+  #    else
+  #      Game.play_dealer_hand!(game)
+  #      Game.draw_hands(game)
+  #      Game.draw_bet_options(game)
+  #    end
+  #  end
   #
   #  def hit!(player_hand, game) do
   #    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)

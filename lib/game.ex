@@ -150,24 +150,32 @@ defmodule Blackjack.Game do
     game
   end
 
-  def draw_hands(game) do
-    Game.clear(game)
+  def to_s(game) do
+    dh = DealerHand.to_s(game.dealer_hand)
+    phs = Enum.with_index(game.player_hands)
+          |> Enum.reduce(
+               "",
+               fn ({player_hand, index}, acc) ->
+                 acc <> PlayerHand.to_s(player_hand, index, game)
+               end
+             )
+    money = Game.format_money(game.money / 100.0)
 
-    IO.puts("\n Dealer:\n")
-    DealerHand.to_s(game.dealer_hand)
+    "\n Dealer:\n#{dh}\n Player $#{money}:\n#{phs}"
+  end
 
-    IO.puts("\n Player $#{game.money / 100.0}:\n")
-    IO.puts(
-      Enum.reduce(
-        game.player_hands,
-        "",
-        fn (player_hand, acc) ->
-          acc <> PlayerHand.to_s(player_hand)
-        end
-      )
-    )
+  def draw(game) do
+    game
+    |> Game.clear
+    |> Game.to_s
+    |> IO.puts
 
     game
+  end
+
+  def format_money(value) do
+    :io_lib.format("~.2f", [value])
+    |> to_string()
   end
 
   #  def draw_bet_options(game) do

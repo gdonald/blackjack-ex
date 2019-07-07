@@ -339,30 +339,54 @@ defmodule GameSpec do
 
   describe "Game.clear/1" do
     it "outputs escape sequences to clear terminal" do
-      expect capture_io(
-               fn ->
-                 Game.clear(%Game{})
-               end
-             )
+      expect capture_io(fn -> Game.clear(%Game{}) end)
              |> to(eq "\e[H\e[2J\n")
     end
   end
 
-  describe "Game.draw_hands/1" do
+  describe "Game.format_money/1" do
+    it "outputs money as a formatted string" do
+      expect Game.format_money(1.0)
+             |> to(eq "1.00")
+    end
+
+    it "outputs money as a formatted string" do
+      expect Game.format_money(1.5)
+             |> to(eq "1.50")
+    end
+
+    it "outputs money as a formatted string" do
+      expect Game.format_money(1.75)
+             |> to(eq "1.75")
+    end
+
+    it "outputs money as a formatted string" do
+      expect Game.format_money(1.234)
+             |> to(eq "1.23")
+    end
+  end
+
+  describe "Game.to_s/1" do
     let :game, do: %Game{
       dealer_hand: dealer_hand_10_6(),
       player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
-    it "draw dealer and player hands" do
-      expected = "\e[H\e[2J\n\n Dealer:\n\n\n Player $100.0:\n\n 🂩 🂪 ⇒  19 🂡 🂪 ⇒  21\n"
-      expect capture_io(
-               fn ->
-                 Game.draw_hands(game())
-               end
-             )
+    it "returns game as a string" do
+      expected = "\n Dealer:\n 🂪 🂦 ⇒  16\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n"
+      expect Game.to_s(game())
              |> to(eq expected)
     end
   end
 
+  describe "Game.draw/1" do
+    let :game, do: %Game{
+      dealer_hand: dealer_hand_10_6(),
+      player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
+    it "draws the game as a string" do
+      expected = "\e[H\e[2J\n\n Dealer:\n 🂪 🂦 ⇒  16\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n\n"
+      expect capture_io(fn -> Game.draw(game()) end)
+             |> to(eq expected)
+    end
+  end
 end
