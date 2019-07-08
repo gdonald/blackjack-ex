@@ -5,19 +5,21 @@ defmodule Blackjack.Game do
             dealer_hand: nil,
             player_hands: [],
             current_player_hand: 0,
+            max_player_hands: 7,
             shoe: nil,
             min_bet: 500,
             max_bet: 10000000,
-            save_file: "bj.txt"
+            save_file: "bj.txt",
+            deck_type: 1
 
-  alias Blackjack.{DealerHand, Game, Hand, PlayerHand}
+  alias Blackjack.{DealerHand, Game, Hand, PlayerHand, Shoe}
 
   def run(_args \\ []) do
-    # game = %Game{}
-  end
+    game = %Game{}
+    shoe = Shoe.new(game.num_decks)
 
-  def max_player_hands do
-    7
+    %Game{game | shoe: shoe}
+    |> Game.deal_new_hand
   end
 
   def all_bets(game) do
@@ -60,6 +62,30 @@ defmodule Blackjack.Game do
         else
           game
         end
+      end
+    end
+  end
+
+  def normalize_num_decks!(game) do
+    if game.num_decks < 1 do
+      %Game{game | num_decks: 1}
+    else
+      if game.num_decks > 8 do
+        %Game{game | num_decks: 8}
+      else
+        game
+      end
+    end
+  end
+
+  def normalize_deck_type!(game) do
+    if game.deck_type < 1 do
+      %Game{game | deck_type: 1}
+    else
+      if game.deck_type > 6 do
+        %Game{game | deck_type: 1}
+      else
+        game
       end
     end
   end
@@ -161,10 +187,10 @@ defmodule Blackjack.Game do
              )
     money = Game.format_money(game.money / 100.0)
 
-    "\n Dealer:\n#{dh}\n Player $#{money}:\n#{phs}"
+    " Dealer:\n#{dh}\n\n Player $#{money}:\n#{phs}"
   end
 
-  def draw(game) do
+  def draw_hands(game) do
     game
     |> Game.clear
     |> Game.to_s
@@ -178,43 +204,196 @@ defmodule Blackjack.Game do
     |> to_string()
   end
 
-  #  def draw_bet_options(game) do
-  #    IO.puts " (D) Deal Hand  (B) Change Bet  (O) Options  (Q) Quit"
-  #
-  #    char = IO.getn("", 1)
-  #    cond do
-  #      char == "d" ->
-  #        Game.deal_new_hand(game)
-  #      char == "b" ->
-  #        Game.get_new_bet(game)
-  #      char == "o" ->
-  #        Game.draw_game_options(game)
-  #      char == "q" ->
-  #        Game.clear(game)
-  #      true ->
-  #        Game.clear(game)
-  #        |> Game.draw_hands
-  #        |> Game.draw_bet_options
-  #    end
-  #  end
+  def shuffle(game) do
+    if Shoe.needs_to_shuffle?(game.shoe, game) do
+      shoe = Shoe.new(game.num_decks)
+      %Game{game | shoe: shoe}
+    else
+      game
+    end
+  end
 
-  #  def play_more_hands!(game) do
-  #    game = %Game{game | current_player_hand: game.current_player_hand + 1}
-  #
-  #    player_hand = game.player_hands
-  #                  |> elem(game.current_player_hand)
-  #
-  #    {hand, shoe} = Hand.deal_card!(player_hand, game.shoe)
-  #    player_hand = %PlayerHand{player_hand | hand: hand}
-  #    player_hands = List.replace_at(game.player_hands, game.current_player_hand, player_hand)
-  #
-  #    game = %Game{game | shoe: shoe, player_hands: player_hands}
-  #
-  #    if PlayerHand.is_done?(player_hand) do
-  #      PlayerHand.process!(player_hand, game)
-  #    else
-  #      Game.draw_hands(game)
-  #      PlayerHand.get_action(player_hand)
-  #    end
-  #  end
+  def needs_to_offer_insurance?(dealer_hand, player_hand) do
+    DealerHand.up_card_is_ace?(dealer_hand) && !Hand.is_blackjack?(player_hand.hand)
+  end
+
+  def ask_insurance(game) do
+
+  end
+
+  def deal_new_hand(game) do
+    game = Game.shuffle(game)
+    shoe = game.shoe
+
+    player_hand = %PlayerHand{hand: %Hand{}, bet: game.current_bet}
+    dealer_hand = %DealerHand{hand: %Hand{}}
+
+    {hand, shoe} = Hand.deal_card!(player_hand.hand, shoe)
+    player_hand = %PlayerHand{player_hand | hand: hand}
+
+    {hand, shoe} = Hand.deal_card!(dealer_hand.hand, shoe)
+    dealer_hand = %DealerHand{dealer_hand | hand: hand}
+
+    {hand, shoe} = Hand.deal_card!(player_hand.hand, shoe)
+    player_hand = %PlayerHand{player_hand | hand: hand}
+
+    {hand, shoe} = Hand.deal_card!(dealer_hand.hand, shoe)
+    dealer_hand = %DealerHand{dealer_hand | hand: hand}
+
+    game = %Game{
+      game |
+      shoe: shoe,
+      dealer_hand: dealer_hand,
+      player_hands: [player_hand],
+      current_player_hand: 0
+    }
+
+    if Game.needs_to_offer_insurance?(dealer_hand, player_hand) do
+      Game.draw_hands(game)
+      |> Game.ask_insurance
+    else
+      if PlayerHand.is_done?(player_hand, game) do
+        dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+        %Game{game | dealer_hand: dealer_hand}
+        |> Game.pay_player_hands!
+        |> Game.draw_hands
+        |> Game.draw_bet_options
+      else
+        Game.draw_hands(game)
+        |> PlayerHand.get_action(player_hand)
+        |> Game.save_game!
+      end
+    end
+  end
+
+  def draw_bet_options(game) do
+    IO.puts " (D) Deal Hand  (B) Change Bet  (O) Options  (Q) Quit"
+
+    char = IO.getn("", 1)
+    cond do
+      char == "d" ->
+        Game.deal_new_hand(game)
+      char == "b" ->
+        Game.get_new_bet(game)
+      char == "o" ->
+        Game.draw_game_options(game)
+      char == "q" ->
+        Game.clear(game)
+      true ->
+        Game.clear(game)
+        |> Game.draw_hands
+        |> Game.draw_bet_options
+    end
+  end
+
+  def draw_game_options(game) do
+    IO.puts " (N) Number of Decks  (T) Deck Type  (B) Back"
+
+    char = IO.getn("", 1)
+    cond do
+      char == "n" ->
+        Game.get_new_num_decks(game)
+      char == "t" ->
+        Game.get_new_deck_type(game)
+      char == "b" ->
+        Game.clear(game)
+        |> Game.draw_hands
+        |> Game.draw_bet_options
+      true ->
+        Game.clear(game)
+        |> Game.draw_hands
+        |> Game.draw_game_options
+    end
+  end
+
+  def get_deck_type(game) do
+    Game.clear(game)
+    |> Game.draw_hands
+
+    IO.puts " (1) Regular  (2) Aces  (3) Jacks  (4) Aces & Jacks  (5) Sevens  (6) Eights"
+    deck_type = IO.gets("")
+
+    cond do
+      is_integer(deck_type) ->
+        deck_type
+      true ->
+        Game.get_deck_type(game)
+    end
+  end
+
+  def get_new_deck_type(game) do
+    deck_type = Game.get_deck_type(game)
+
+    %Game{game | deck_type: deck_type}
+    |> Game.normalize_deck_type!
+    |> Game.draw_bet_options
+  end
+
+  def get_num_decks(game) do
+    Game.clear(game)
+    |> Game.draw_hands
+
+    IO.puts "  Number Of Decks: #{game.num_decks}"
+    num_decks = IO.gets("  Enter New Number Of Decks: ")
+
+    cond do
+      is_integer(num_decks) ->
+        num_decks
+      true ->
+        Game.get_num_decks(game)
+    end
+  end
+
+  def get_new_num_decks(game) do
+    decks = Game.get_num_decks(game)
+
+    %Game{game | num_decks: decks}
+    |> Game.normalize_num_decks!
+    |> Game.draw_game_options
+  end
+
+  def get_bet(game) do
+    Game.clear(game)
+    |> Game.draw_hands
+
+    IO.puts "  Current Bet: $#{Game.format_money(game.current_bet / 100.0)}"
+    bet = IO.gets("  Enter New Bet: $")
+
+    cond do
+      is_float(bet) ->
+        trunc(bet)
+      is_integer(bet) ->
+        bet
+      true ->
+        Game.get_bet(game)
+    end
+  end
+
+  def get_new_bet(game) do
+    bet = Game.get_bet(game)
+
+    %Game{game | current_bet: bet * 100}
+    |> Game.normalize_current_bet!
+    |> Game.deal_new_hand
+  end
+
+  def play_more_hands!(game) do
+    game = %Game{game | current_player_hand: game.current_player_hand + 1}
+
+    player_hand = game.player_hands
+                  |> elem(game.current_player_hand)
+
+    {hand, shoe} = Hand.deal_card!(player_hand, game.shoe)
+    player_hand = %PlayerHand{player_hand | hand: hand}
+    player_hands = List.replace_at(game.player_hands, game.current_player_hand, player_hand)
+
+    game = %Game{game | shoe: shoe, player_hands: player_hands}
+
+    if PlayerHand.is_done?(player_hand, game) do
+      PlayerHand.process(game)
+    else
+      Game.draw_hands(game)
+      |> PlayerHand.get_action(player_hand)
+    end
+  end
 end

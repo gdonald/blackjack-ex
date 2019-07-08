@@ -45,18 +45,18 @@ defmodule ShoeSpec do
 
     it "returns false when there are plenty of cards" do
       shoe = %Shoe{cards: (for _ <- 1..11, do: %Card{})}
-      expect Shoe.needs_to_shuffle(shoe, game())
+      expect Shoe.needs_to_shuffle?(shoe, game())
              |> to(be_false())
     end
 
     it "returns true when cards are running low" do
       shoe = %Shoe{cards: [%Card{}]}
-      expect Shoe.needs_to_shuffle(shoe, game())
+      expect Shoe.needs_to_shuffle?(shoe, game())
              |> to(be_true())
     end
 
     it "returns true when no cards" do
-      expect Shoe.needs_to_shuffle(%Shoe{}, game())
+      expect Shoe.needs_to_shuffle?(%Shoe{}, game())
              |> to(be_true())
     end
   end

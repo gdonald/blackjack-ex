@@ -36,13 +36,6 @@ defmodule GameSpec do
 
   let :dealer_hand_10_2_10, do: %DealerHand{hand: hand_10_2_10(), hide_down_card: false}
 
-  describe "Game.max_player_hands/0" do
-    it "returns 7" do
-      expect Game.max_player_hands
-             |> to(eq 7)
-    end
-  end
-
   describe "Game.all_bets/1" do
     let :player_hand, do: %PlayerHand{bet: 1000}
     let :game, do: %Game{player_hands: [player_hand(), player_hand_7_7()]}
@@ -372,21 +365,37 @@ defmodule GameSpec do
       player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
     it "returns game as a string" do
-      expected = "\n Dealer:\n 🂪 🂦 ⇒  16\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n"
+      expected = " Dealer:\n 🂪 🂦 ⇒  16\n\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n"
       expect Game.to_s(game())
              |> to(eq expected)
     end
   end
 
-  describe "Game.draw/1" do
+  describe "Game.draw_hands/1" do
     let :game, do: %Game{
       dealer_hand: dealer_hand_10_6(),
       player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
     it "draws the game as a string" do
-      expected = "\e[H\e[2J\n\n Dealer:\n 🂪 🂦 ⇒  16\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n\n"
-      expect capture_io(fn -> Game.draw(game()) end)
+      expected = "\e[H\e[2J\n Dealer:\n 🂪 🂦 ⇒  16\n\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n\n"
+      expect capture_io(fn -> Game.draw_hands(game()) end)
              |> to(eq expected)
     end
   end
+
+#  describe "Game.draw_bet_options/1" do
+#    let :game, do: %Game{
+#      dealer_hand: dealer_hand_10_6(),
+#      player_hands: [player_hand_10_9()]}
+#
+#    it "draws bet options" do
+#      expect IO.puts "d"
+#                     |> capture_io(
+#                          fn ->
+#                            Game.draw_bet_options(game())
+#                          end
+#                        )
+#                     |> to(eq "")
+#    end
+#  end
 end

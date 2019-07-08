@@ -27,7 +27,7 @@ defmodule Blackjack.Shoe do
     trunc(cards_dealt / total_cards * 100)
   end
 
-  def needs_to_shuffle(shoe, game) do
+  def needs_to_shuffle?(shoe, game) do
     if length(shoe.cards) == 0 do
       true
     else

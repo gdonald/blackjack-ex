@@ -113,7 +113,7 @@ defmodule Blackjack.PlayerHand do
 
   def can_split?(player_hand, game) do
     if player_hand.stood
-       || length(game.player_hands) >= Game.max_player_hands()
+       || length(game.player_hands) >= game.max_player_hands
        || game.money < Game.all_bets(game) + player_hand.bet do
       false
     else
@@ -172,30 +172,34 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  #  def process(player_hand, game) do
-  #    if Game.more_hands_to_play?(game) do
-  #      Game.play_more_hands!(game)
-  #    else
-  #      Game.play_dealer_hand!(game)
-  #      Game.draw_hands(game)
-  #      Game.draw_bet_options(game)
-  #    end
-  #  end
-  #
-  #  def hit!(player_hand, game) do
-  #    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
-  #    player_hand = %PlayerHand{player_hand | hand: hand}
-  #    game = %Game{game | shoe: shoe}
-  #
-  #    if PlayerHand.is_done?(player_hand, game) do
-  #      PlayerHand.process(game)
-  #    else
-  #      Game.draw_hands(game)
-  #    end
-  #
-  #    {player_hand, game}
-  #
-  #    # TODO: Move to the hit! caller
-  #    # game->playerHands.at(game->currentPlayerHand).getAction();
-  #  end
+  def get_action(game, player_hand) do
+
+  end
+
+  def process(game) do
+    if Game.more_hands_to_play?(game) do
+      Game.play_more_hands!(game)
+    else
+      Game.play_dealer_hand!(game)
+      |> Game.draw_hands
+      |> Game.draw_bet_options
+    end
+  end
+
+  def hit!(player_hand, game) do
+    {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
+    player_hand = %PlayerHand{player_hand | hand: hand}
+    game = %Game{game | shoe: shoe}
+
+    if PlayerHand.is_done?(player_hand, game) do
+      PlayerHand.process(game)
+    else
+      Game.draw_hands(game)
+    end
+
+    {player_hand, game}
+
+    # TODO: Move to the hit! caller
+    # game->playerHands.at(game->currentPlayerHand).getAction();
+  end
 end
