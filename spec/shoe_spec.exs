@@ -12,7 +12,7 @@ defmodule ShoeSpec do
 
   describe "Shoe.new/1" do
     it "creates a new shoe" do
-      shoe = Shoe.new(1)
+      shoe = Shoe.new_regular(1)
       expect length(shoe.cards)
              |> to(eq 52)
     end
@@ -20,7 +20,7 @@ defmodule ShoeSpec do
 
   describe "Shoe.next_card/1" do
     it "returns the next card and updated shoe" do
-      shoe = Shoe.new(1)
+      shoe = Shoe.new_regular(1)
       {card, shoe} = Shoe.next_card(shoe)
       expect %Card{} = card
       expect %Shoe{} = shoe

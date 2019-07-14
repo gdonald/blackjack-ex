@@ -45,15 +45,8 @@ defmodule Blackjack.Shoe do
     end
   end
 
-  def new(num_decks) do
-    cards = new_regular(num_decks)
-            |> Enum.shuffle
-
-    %Shoe{cards: cards}
-  end
-
-  defp new_regular(num_decks) do
-    for _decks <- 1..num_decks do
+  def new_regular(num_decks) do
+    cards = for _decks <- 1..num_decks do
       for suit_value <- 0..3 do
         for value <- 0..12 do
           %Card{value: value, suit_value: suit_value}
@@ -61,10 +54,13 @@ defmodule Blackjack.Shoe do
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 
-  defp new_aces_jacks(num_decks) do
-    for _decks <- 1..(num_decks * 4) do
+  def new_aces_jacks(num_decks) do
+    cards = for _decks <- 1..(num_decks * 4) do
       for suit_value <- 0..3 do
         [
           %Card{value: 0, suit_value: suit_value},
@@ -73,41 +69,56 @@ defmodule Blackjack.Shoe do
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 
-  defp new_jacks(num_decks) do
-    for _decks <- 1..(num_decks * 5) do
+  def new_jacks(num_decks) do
+    cards = for _decks <- 1..(num_decks * 5) do
       for suit_value <- 0..3 do
         %Card{value: 10, suit_value: suit_value}
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 
-  defp new_aces(num_decks) do
-    for _decks <- 1..(num_decks * 5) do
+  def new_aces(num_decks) do
+    cards = for _decks <- 1..(num_decks * 5) do
       for suit_value <- 0..3 do
         %Card{value: 0, suit_value: suit_value}
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 
-  defp new_sevens(num_decks) do
-    for _decks <- 1..(num_decks * 5) do
+  def new_sevens(num_decks) do
+    cards = for _decks <- 1..(num_decks * 5) do
       for suit_value <- 0..3 do
         %Card{value: 6, suit_value: suit_value}
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 
-  defp new_eights(num_decks) do
-    for _decks <- 1..(num_decks * 5) do
+  def new_eights(num_decks) do
+    cards = for _decks <- 1..(num_decks * 5) do
       for suit_value <- 0..3 do
         %Card{value: 7, suit_value: suit_value}
       end
     end
     |> List.flatten
+    |> Enum.shuffle
+
+    %Shoe{cards: cards}
   end
 end
