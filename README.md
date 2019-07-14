@@ -14,7 +14,7 @@ mix deps.get
 mix espec
 ```
 
-#### Run coverage
+#### Run specs with code coverage
 
 ```
 mix coveralls.html
@@ -33,6 +33,12 @@ mix escript.build
 ```
 ./blackjack
 ```
+
+#### Terminal
+
+Increase your terminal font size to see the cards better:
+
+![Blackjack](https://raw.githubusercontent.com/gdonald/blackjack-ex/master/bj.png)
 
 #### Status
 
