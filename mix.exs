@@ -29,7 +29,8 @@ defmodule Blackjack.MixProject do
 
   defp escript do
     [
-      main_module: Blackjack
+      main_module: Blackjack,
+      emu_args: "-noinput -elixir ansi_enabled true"
     ]
   end
 end

@@ -461,7 +461,7 @@ defmodule PlayerHandSpec do
     end
 
     it "returns an empty string for non-current hand" do
-      expect PlayerHand.get_arrow(%PlayerHand{}, 0, %Game{current_player_hand: 1})
+      expect PlayerHand.get_arrow(%PlayerHand{}, 0, %Game{current_player_hand_index: 1})
              |> to(eq "")
     end
 
@@ -506,7 +506,7 @@ defmodule PlayerHandSpec do
   describe "PlayerHand.to_s/3" do
     it "returns player hand as a string" do
       expect PlayerHand.to_s(player_hand_A_10(), 0, %Game{})
-             |> to(eq " 🂡 🂪 ⇒  21  $5.00 ⇐  \n")
+             |> to(eq " 🂡 🂪 ⇒  21  $5.00 ⇐  \r\n")
     end
   end
 end

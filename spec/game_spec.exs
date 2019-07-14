@@ -48,7 +48,7 @@ defmodule GameSpec do
 
   describe "Game.more_hands_to_play?/1" do
     context "one player hand" do
-      let :game, do: %Game{current_player_hand: 0, player_hands: [%PlayerHand{}]}
+      let :game, do: %Game{current_player_hand_index: 0, player_hands: [%PlayerHand{}]}
 
       it "returns false" do
         expect Game.more_hands_to_play?(game())
@@ -57,7 +57,7 @@ defmodule GameSpec do
     end
 
     context "two player hands, currently on the first hand" do
-      let :game, do: %Game{current_player_hand: 0, player_hands: [%PlayerHand{}, %PlayerHand{}]}
+      let :game, do: %Game{current_player_hand_index: 0, player_hands: [%PlayerHand{}, %PlayerHand{}]}
 
       it "returns true" do
         expect Game.more_hands_to_play?(game())
@@ -66,7 +66,7 @@ defmodule GameSpec do
     end
 
     context "two player hands, currently on the second hand" do
-      let :game, do: %Game{current_player_hand: 1, player_hands: [%PlayerHand{}, %PlayerHand{}]}
+      let :game, do: %Game{current_player_hand_index: 1, player_hands: [%PlayerHand{}, %PlayerHand{}]}
 
       it "returns false" do
         expect Game.more_hands_to_play?(game())
@@ -333,7 +333,7 @@ defmodule GameSpec do
   describe "Game.clear/1" do
     it "outputs escape sequences to clear terminal" do
       expect capture_io(fn -> Game.clear(%Game{}) end)
-             |> to(eq "\e[H\e[2J\n")
+             |> to(eq "\e[H\e[2J")
     end
   end
 
@@ -365,7 +365,7 @@ defmodule GameSpec do
       player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
     it "returns game as a string" do
-      expected = " Dealer:\n 🂪 🂦 ⇒  16\n\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n"
+      expected = "\r\n Dealer:\r\n 🂪 🂦 ⇒  16\r\n\r\n Player $100.00:\r\n 🂩 🂪 ⇒  19  $5.00 ⇐  \r\n 🂡 🂪 ⇒  21  $5.00  \r\n\r\n"
       expect Game.to_s(game())
              |> to(eq expected)
     end
@@ -377,7 +377,7 @@ defmodule GameSpec do
       player_hands: [player_hand_10_9(), player_hand_A_10()]}
 
     it "draws the game as a string" do
-      expected = "\e[H\e[2J\n Dealer:\n 🂪 🂦 ⇒  16\n\n Player $100.00:\n 🂩 🂪 ⇒  19  $5.00 ⇐  \n 🂡 🂪 ⇒  21  $5.00  \n\n"
+      expected = "\e[H\e[2J\r\n Dealer:\r\n 🂪 🂦 ⇒  16\r\n\r\n Player $100.00:\r\n 🂩 🂪 ⇒  19  $5.00 ⇐  \r\n 🂡 🂪 ⇒  21  $5.00  \r\n\r\n"
       expect capture_io(fn -> Game.draw_hands(game()) end)
              |> to(eq expected)
     end

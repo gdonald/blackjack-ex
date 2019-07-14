@@ -4,7 +4,7 @@ defmodule Blackjack.Game do
             current_bet: 500,
             dealer_hand: nil,
             player_hands: [],
-            current_player_hand: 0,
+            current_player_hand_index: 0,
             max_player_hands: 7,
             shoe: nil,
             min_bet: 500,
@@ -15,11 +15,22 @@ defmodule Blackjack.Game do
   alias Blackjack.{DealerHand, Game, Hand, PlayerHand, Shoe}
 
   def run(_args \\ []) do
+    {:ok, Port.open({:spawn, "tty_sl -c -e"}, [:binary, :eof])}
+
     game = %Game{}
     shoe = Shoe.new(game.num_decks)
 
     %Game{game | shoe: shoe}
     |> Game.deal_new_hand
+  end
+
+  def current_player_hand(game) do
+    Enum.at(game.player_hands, game.current_player_hand_index)
+  end
+
+  def update_current_player_hand!(game, player_hand) do
+    player_hands = List.replace_at(game.player_hands, game.current_player_hand_index, player_hand)
+    %Game{game | player_hands: player_hands}
   end
 
   def all_bets(game) do
@@ -33,7 +44,7 @@ defmodule Blackjack.Game do
   end
 
   def more_hands_to_play?(game) do
-    game.current_player_hand < length(game.player_hands) - 1
+    game.current_player_hand_index < length(game.player_hands) - 1
   end
 
   def needs_to_play_dealer_hand?(game) do
@@ -163,16 +174,20 @@ defmodule Blackjack.Game do
   end
 
   def play_dealer_hand!(game) do
-    game
-    |> Game.unhide_dealer_down_card!
-    |> Game.deal_dealer_cards!
-    |> Game.pay_player_hands!
+    game = Game.unhide_dealer_down_card!(game)
+
+    if Game.needs_to_play_dealer_hand?(game) do
+      Game.deal_dealer_cards!(game)
+      |> Game.pay_player_hands!
+    else
+      Game.pay_player_hands!(game)
+    end
   end
 
   def clear(game) do
     # \e[H - reset
     # \e[2J - clear
-    IO.puts("\e[H\e[2J")
+    IO.write("\e[H\e[2J")
     game
   end
 
@@ -187,14 +202,14 @@ defmodule Blackjack.Game do
              )
     money = Game.format_money(game.money / 100.0)
 
-    " Dealer:\n#{dh}\n\n Player $#{money}:\n#{phs}"
+    "\r\n Dealer:\r\n#{dh}\r\n\r\n Player $#{money}:\r\n#{phs}\r\n"
   end
 
   def draw_hands(game) do
     game
     |> Game.clear
     |> Game.to_s
-    |> IO.puts
+    |> IO.write
 
     game
   end
@@ -217,8 +232,55 @@ defmodule Blackjack.Game do
     DealerHand.up_card_is_ace?(dealer_hand) && !Hand.is_blackjack?(player_hand.hand)
   end
 
-  def ask_insurance(game) do
+  def insure_hand(game) do
+    player_hand = Game.current_player_hand(game)
+    bet = player_hand.bet / 2
+    player_hand = %PlayerHand{player_hand | bet: bet, played: true, payed: true, status: :lost}
 
+    money = game.money - player_hand.bet
+    game = Game.update_current_player_hand!(game, player_hand)
+
+    %Game{game | money: money}
+  end
+
+  def no_insurance(game) do
+    if Hand.is_blackjack?(game.dealer_hand.hand) do
+      dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+      %Game{game | dealer_hand: dealer_hand}
+      |> Game.pay_player_hands!
+      |> Game.draw_hands
+      |> Game.draw_bet_options
+    else
+      player_hand = Game.current_player_hand(game)
+      {is_done, player_hand, game} = PlayerHand.is_done?(player_hand, game)
+
+      if is_done do
+        Game.play_dealer_hand!(game)
+        |> Game.draw_hands
+        |> Game.draw_bet_options
+      else
+        Game.draw_hands(game)
+        |> PlayerHand.get_action(player_hand)
+      end
+    end
+  end
+
+  def ask_insurance(game) do
+    IO.write " Insurance?  (Y) Yes  (N) No\r\n"
+
+    char = Game.get_input()
+    cond do
+      char == "y" ->
+        Game.insure_hand(game)
+        |> Game.draw_hands
+        |> Game.draw_bet_options
+      char == "n" ->
+        Game.no_insurance(game)
+      true ->
+        Game.clear(game)
+        |> Game.draw_hands
+        |> Game.ask_insurance
+    end
   end
 
   def deal_new_hand(game) do
@@ -245,14 +307,15 @@ defmodule Blackjack.Game do
       shoe: shoe,
       dealer_hand: dealer_hand,
       player_hands: [player_hand],
-      current_player_hand: 0
+      current_player_hand_index: 0
     }
 
     if Game.needs_to_offer_insurance?(dealer_hand, player_hand) do
       Game.draw_hands(game)
       |> Game.ask_insurance
     else
-      if PlayerHand.is_done?(player_hand, game) do
+      {is_done, player_hand, game} = PlayerHand.is_done?(player_hand, game)
+      if is_done do
         dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
         %Game{game | dealer_hand: dealer_hand}
         |> Game.pay_player_hands!
@@ -266,10 +329,17 @@ defmodule Blackjack.Game do
     end
   end
 
-  def draw_bet_options(game) do
-    IO.puts " (D) Deal Hand  (B) Change Bet  (O) Options  (Q) Quit"
+  def get_input do
+    receive do
+      {_port, {:data, data}} ->
+        data
+    end
+  end
 
-    char = IO.getn("", 1)
+  def draw_bet_options(game) do
+    IO.write " (D) Deal Hand  (B) Change Bet  (O) Options  (Q) Quit\r\n"
+
+    char = Game.get_input()
     cond do
       char == "d" ->
         Game.deal_new_hand(game)
@@ -287,9 +357,9 @@ defmodule Blackjack.Game do
   end
 
   def draw_game_options(game) do
-    IO.puts " (N) Number of Decks  (T) Deck Type  (B) Back"
+    IO.write " (N) Number of Decks  (T) Deck Type  (B) Back\r\n"
 
-    char = IO.getn("", 1)
+    char = Game.get_input()
     cond do
       char == "n" ->
         Game.get_new_num_decks(game)
@@ -310,9 +380,9 @@ defmodule Blackjack.Game do
     Game.clear(game)
     |> Game.draw_hands
 
-    IO.puts " (1) Regular  (2) Aces  (3) Jacks  (4) Aces & Jacks  (5) Sevens  (6) Eights"
-    deck_type = IO.gets("")
+    IO.write " (1) Regular  (2) Aces  (3) Jacks  (4) Aces & Jacks  (5) Sevens  (6) Eights\r\n"
 
+    deck_type = Game.get_input()
     cond do
       is_integer(deck_type) ->
         deck_type
@@ -333,9 +403,10 @@ defmodule Blackjack.Game do
     Game.clear(game)
     |> Game.draw_hands
 
-    IO.puts "  Number Of Decks: #{game.num_decks}"
-    num_decks = IO.gets("  Enter New Number Of Decks: ")
+    IO.write "  Number Of Decks: #{game.num_decks}\r\n"
+    IO.write "  Enter New Number Of Decks:\r\n"
 
+    num_decks = Game.get_input()
     cond do
       is_integer(num_decks) ->
         num_decks
@@ -356,9 +427,9 @@ defmodule Blackjack.Game do
     Game.clear(game)
     |> Game.draw_hands
 
-    IO.puts "  Current Bet: $#{Game.format_money(game.current_bet / 100.0)}"
-    bet = IO.gets("  Enter New Bet: $")
+    IO.write "  Current Bet: $#{Game.format_money(game.current_bet / 100.0)}\r\n"
 
+    bet = Game.get_input()
     cond do
       is_float(bet) ->
         trunc(bet)
@@ -378,22 +449,20 @@ defmodule Blackjack.Game do
   end
 
   def play_more_hands!(game) do
-    game = %Game{game | current_player_hand: game.current_player_hand + 1}
+    game = %Game{game | current_player_hand_index: game.current_player_hand_index + 1}
+    player_hand = Game.current_player_hand(game)
+    {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
 
-    player_hand = game.player_hands
-                  |> elem(game.current_player_hand)
-
-    {hand, shoe} = Hand.deal_card!(player_hand, game.shoe)
-    player_hand = %PlayerHand{player_hand | hand: hand}
-    player_hands = List.replace_at(game.player_hands, game.current_player_hand, player_hand)
-
-    game = %Game{game | shoe: shoe, player_hands: player_hands}
-
-    if PlayerHand.is_done?(player_hand, game) do
+    {is_done, player_hand, game} = PlayerHand.is_done?(player_hand, game)
+    if is_done do
       PlayerHand.process(game)
     else
       Game.draw_hands(game)
       |> PlayerHand.get_action(player_hand)
     end
+  end
+
+  def split_current_hand(game) do
+    game
   end
 end

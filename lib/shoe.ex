@@ -33,10 +33,15 @@ defmodule Blackjack.Shoe do
     else
       used = Shoe.used_cards_percent(shoe, game)
 
-      Enum.reduce(Shoe.shuffle_specs(), [], fn ({percent, decks_count}, acc) ->
-        result = decks_count == game.num_decks && used > percent
-        if result, do: acc ++ [result], else: acc
-      end) |> length > 0
+      Enum.reduce(
+        Shoe.shuffle_specs(),
+        [],
+        fn ({percent, decks_count}, acc) ->
+          result = decks_count == game.num_decks && used > percent
+          if result, do: acc ++ [result], else: acc
+        end
+      )
+      |> length > 0
     end
   end
 
@@ -53,6 +58,54 @@ defmodule Blackjack.Shoe do
         for value <- 0..12 do
           %Card{value: value, suit_value: suit_value}
         end
+      end
+    end
+    |> List.flatten
+  end
+
+  defp new_aces_jacks(num_decks) do
+    for _decks <- 1..(num_decks * 4) do
+      for suit_value <- 0..3 do
+        [
+          %Card{value: 0, suit_value: suit_value},
+          %Card{value: 10, suit_value: suit_value}
+        ]
+      end
+    end
+    |> List.flatten
+  end
+
+  defp new_jacks(num_decks) do
+    for _decks <- 1..(num_decks * 5) do
+      for suit_value <- 0..3 do
+        %Card{value: 10, suit_value: suit_value}
+      end
+    end
+    |> List.flatten
+  end
+
+  defp new_aces(num_decks) do
+    for _decks <- 1..(num_decks * 5) do
+      for suit_value <- 0..3 do
+        %Card{value: 0, suit_value: suit_value}
+      end
+    end
+    |> List.flatten
+  end
+
+  defp new_sevens(num_decks) do
+    for _decks <- 1..(num_decks * 5) do
+      for suit_value <- 0..3 do
+        %Card{value: 6, suit_value: suit_value}
+      end
+    end
+    |> List.flatten
+  end
+
+  defp new_eights(num_decks) do
+    for _decks <- 1..(num_decks * 5) do
+      for suit_value <- 0..3 do
+        %Card{value: 7, suit_value: suit_value}
       end
     end
     |> List.flatten

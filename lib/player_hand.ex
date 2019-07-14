@@ -29,6 +29,7 @@ defmodule Blackjack.PlayerHand do
     if PlayerHand.is_busted?(player_hand) do
       player_hand = %PlayerHand{player_hand | payed: true, status: :lost}
       game = %Game{game | money: game.money - player_hand.bet}
+      game = Game.update_current_player_hand!(game, player_hand)
       {player_hand, game}
     else
       {player_hand, game}
@@ -38,6 +39,7 @@ defmodule Blackjack.PlayerHand do
   def is_done?(player_hand, game) do
     if PlayerHand.is_played?(player_hand) do
       player_hand = %PlayerHand{player_hand | played: true}
+      game = Game.update_current_player_hand!(game, player_hand)
       {player_hand, game} = PlayerHand.handle_busted_hand!(player_hand, game)
       {true, player_hand, game}
     else
@@ -65,7 +67,7 @@ defmodule Blackjack.PlayerHand do
   end
 
   def get_arrow(player_hand, index, game) do
-    if !player_hand.played && index == game.current_player_hand do
+    if !player_hand.played && index == game.current_player_hand_index do
       " ⇐"
     else
       ""
@@ -108,7 +110,7 @@ defmodule Blackjack.PlayerHand do
     arrow = PlayerHand.get_arrow(player_hand, index, game)
     status = PlayerHand.get_status(player_hand)
 
-    " #{cards} ⇒  #{value}  #{sign}#{bet}#{arrow}  #{status}\n"
+    " #{cards} ⇒  #{value}  #{sign}#{bet}#{arrow}  #{status}\r\n"
   end
 
   def can_split?(player_hand, game) do
@@ -173,7 +175,28 @@ defmodule Blackjack.PlayerHand do
   end
 
   def get_action(game, player_hand) do
+    hit = if PlayerHand.can_hit?(player_hand), do: "(H) Hit  ", else: ""
+    stand = if PlayerHand.can_stand?(player_hand), do: "(S) Stand  ", else: ""
+    split = if PlayerHand.can_split?(player_hand, game), do: "(P) Split  ", else: ""
+    double = if PlayerHand.can_double?(player_hand, game), do: "(D) Double  ", else: ""
 
+    IO.write " #{hit}#{stand}#{split}#{double}\r\n"
+
+    char = Game.get_input()
+    cond do
+      char == "h" ->
+        PlayerHand.hit!(player_hand, game)
+      char == "s" ->
+        PlayerHand.stand!(player_hand, game)
+      char == "p" ->
+        Game.split_current_hand(game)
+      char == "d" ->
+        PlayerHand.double!(player_hand, game)
+      true ->
+        Game.clear(game)
+        |> Game.draw_hands
+        |> PlayerHand.get_action(player_hand)
+    end
   end
 
   def process(game) do
@@ -186,20 +209,51 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def hit!(player_hand, game) do
+  def deal_card!(player_hand, game) do
     {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
     player_hand = %PlayerHand{player_hand | hand: hand}
-    game = %Game{game | shoe: shoe}
+    game = Game.update_current_player_hand!(game, player_hand)
+    {player_hand, %Game{game | shoe: shoe}}
+  end
 
-    if PlayerHand.is_done?(player_hand, game) do
+  def hit!(player_hand, game) do
+    {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
+    {is_done, player_hand, game} = PlayerHand.is_done?(player_hand, game)
+
+    if is_done do
       PlayerHand.process(game)
     else
       Game.draw_hands(game)
+      |> PlayerHand.get_action(player_hand)
     end
+  end
 
-    {player_hand, game}
+  def stand!(player_hand, game) do
+    player_hand = %PlayerHand{player_hand | stood: true, played: true}
+    game = Game.update_current_player_hand!(game, player_hand)
 
-    # TODO: Move to the hit! caller
-    # game->playerHands.at(game->currentPlayerHand).getAction();
+    if Game.more_hands_to_play?(game) do
+      Game.play_more_hands!(game)
+    else
+      Game.play_dealer_hand!(game)
+      |> Game.draw_hands
+      |> Game.draw_bet_options
+    end
+  end
+
+  def double!(player_hand, game) do
+    {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
+
+    bet = player_hand.bet * 2
+    player_hand = %PlayerHand{player_hand | played: true, bet: bet}
+
+    game = Game.update_current_player_hand!(game, player_hand)
+    {is_done, _player_hand, game} = PlayerHand.is_done?(player_hand, game)
+
+    if is_done do
+      PlayerHand.process(game)
+    else
+      game
+    end
   end
 end
