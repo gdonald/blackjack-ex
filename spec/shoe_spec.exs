@@ -10,11 +10,116 @@ defmodule ShoeSpec do
     end
   end
 
-  describe "Shoe.new/1" do
-    it "creates a new shoe" do
+  describe "Shoe.new_regular/1" do
+    it "creates a new regular shoe" do
       shoe = Shoe.new_regular(1)
       expect length(shoe.cards)
              |> to(eq 52)
+    end
+  end
+
+  describe "Shoe.new_aces_jacks/1" do
+    it "creates a new shoe with only aces and jacks" do
+      shoe = Shoe.new_aces_jacks(1)
+      expect length(shoe.cards)
+             |> to(eq 32)
+
+      result = Enum.reduce(
+                 shoe.cards,
+                 [],
+                 fn (card, acc) ->
+                   valid = card.value == 0 || card.value == 10
+                   if !valid, do: acc ++ [valid], else: acc
+                 end
+               )
+               |> length == 0
+
+      expect result
+             |> to(be_true())
+    end
+  end
+
+  describe "Shoe.new_jacks/1" do
+    it "creates a new shoe with only jacks" do
+      shoe = Shoe.new_jacks(1)
+      expect length(shoe.cards)
+             |> to(eq 20)
+
+      result = Enum.reduce(
+                 shoe.cards,
+                 [],
+                 fn (card, acc) ->
+                   valid = card.value == 10
+                   if !valid, do: acc ++ [valid], else: acc
+                 end
+               )
+               |> length == 0
+
+      expect result
+             |> to(be_true())
+    end
+  end
+
+  describe "Shoe.new_aces/1" do
+    it "creates a new shoe with only aces" do
+      shoe = Shoe.new_aces(1)
+      expect length(shoe.cards)
+             |> to(eq 20)
+
+      result = Enum.reduce(
+                 shoe.cards,
+                 [],
+                 fn (card, acc) ->
+                   valid = card.value == 0
+                   if !valid, do: acc ++ [valid], else: acc
+                 end
+               )
+               |> length == 0
+
+      expect result
+             |> to(be_true())
+    end
+  end
+
+  describe "Shoe.new_sevens/1" do
+    it "creates a new shoe with only sevens" do
+      shoe = Shoe.new_sevens(1)
+      expect length(shoe.cards)
+             |> to(eq 20)
+
+      result = Enum.reduce(
+                 shoe.cards,
+                 [],
+                 fn (card, acc) ->
+                   valid = card.value == 6
+                   if !valid, do: acc ++ [valid], else: acc
+                 end
+               )
+               |> length == 0
+
+      expect result
+             |> to(be_true())
+    end
+  end
+
+  describe "Shoe.new_eights/1" do
+    it "creates a new shoe with only eights" do
+      shoe = Shoe.new_eights(1)
+      expect length(shoe.cards)
+             |> to(eq 20)
+
+      result = Enum.reduce(
+                 shoe.cards,
+                 [],
+                 fn (card, acc) ->
+                   valid = card.value == 7
+                   if !valid, do: acc ++ [valid], else: acc
+                 end
+               )
+               |> length == 0
+
+      expect result
+             |> to(be_true())
     end
   end
 
@@ -36,7 +141,7 @@ defmodule ShoeSpec do
     it "returns 90" do
       shoe = %Shoe{cards: [card(), card(), card(), card(), card()]}
       expect Shoe.used_cards_percent(shoe, game())
-      |> to(eq 90)
+             |> to(eq 90)
     end
   end
 
