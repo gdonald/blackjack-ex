@@ -174,13 +174,17 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def get_action(game, player_hand) do
+  def draw_actions(game, player_hand) do
     hit = if PlayerHand.can_hit?(player_hand), do: "(H) Hit  ", else: ""
     stand = if PlayerHand.can_stand?(player_hand), do: "(S) Stand  ", else: ""
     split = if PlayerHand.can_split?(player_hand, game), do: "(P) Split  ", else: ""
     double = if PlayerHand.can_double?(player_hand, game), do: "(D) Double  ", else: ""
 
     IO.write " #{hit}#{stand}#{split}#{double}\r\n"
+  end
+
+  def get_action(game, player_hand) do
+    PlayerHand.draw_actions(game, player_hand)
 
     char = Game.get_input()
     cond do

@@ -27,7 +27,7 @@ defmodule GameSpec do
   let :player_hand_10_9, do: %PlayerHand{hand: hand_10_9()}
 
   let :player_hand_10_2_10, do: %PlayerHand{hand: hand_10_2_10(), payed: true}
-  let :player_hand_10_10_10, do: %PlayerHand{hand: hand_10_10_10()}
+  let :player_hand_10_10_10, do: %PlayerHand{hand: hand_10_10_10(), payed: true}
 
   let :dealer_hand_A_6, do: %DealerHand{hand: hand_A_6(), hide_down_card: false}
   let :dealer_hand_10_8, do: %DealerHand{hand: hand_10_8(), hide_down_card: false}
@@ -35,6 +35,105 @@ defmodule GameSpec do
   let :dealer_hand_10_7, do: %DealerHand{hand: hand_10_7(), hide_down_card: false}
 
   let :dealer_hand_10_2_10, do: %DealerHand{hand: hand_10_2_10(), hide_down_card: false}
+
+  describe "Game.shuffle/1" do
+    context "needs to shuffle" do
+      let :game, do: %Game{shoe: %Shoe{cards: []}}
+
+      it "shuffles the shoe" do
+        game = Game.shuffle(game())
+
+        expect length(game.shoe.cards)
+               |> to(eq 52)
+      end
+    end
+
+    context "does not need to shuffle" do
+      let :shoe, do: Shoe.new_regular(1)
+      let :game, do: %Game{shoe: shoe()}
+
+      it "does not shuffle the shoe" do
+        game = Game.shuffle(game())
+
+        expect length(game.shoe.cards)
+               |> to(eq 52)
+      end
+    end
+  end
+
+  describe "Game.normalize_deck_type!/1" do
+    context "deck type is too high" do
+      let :game, do: %Game{deck_type: 7}
+
+      it "normalizes the deck type to regular" do
+        game = Game.normalize_deck_type!(game())
+        expect game.deck_type
+               |> to(eq 1)
+      end
+    end
+
+    context "deck type is too low" do
+      let :game, do: %Game{deck_type: 0}
+
+      it "normalizes the deck type to regular" do
+        game = Game.normalize_deck_type!(game())
+        expect game.deck_type
+               |> to(eq 1)
+      end
+    end
+
+    context "deck type is already normal" do
+      let :game, do: %Game{deck_type: 1}
+
+      it "does not change the deck type" do
+        game = Game.normalize_deck_type!(game())
+        expect game.deck_type
+               |> to(eq 1)
+      end
+    end
+  end
+
+  describe "Game.normalize_num_decks!/1" do
+    context "deck count is too high" do
+      let :game, do: %Game{num_decks: 9}
+
+      it "normalizes the number of decks to 8" do
+        game = Game.normalize_num_decks!(game())
+        expect game.num_decks
+               |> to(eq 8)
+      end
+    end
+
+    context "deck count is too low" do
+      let :game, do: %Game{num_decks: 0}
+
+      it "normalizes the number of decks to 1" do
+        game = Game.normalize_num_decks!(game())
+        expect game.num_decks
+               |> to(eq 1)
+      end
+    end
+
+    context "deck count is already normal" do
+      let :game, do: %Game{num_decks: 1}
+
+      it "does not change the number of decks" do
+        game = Game.normalize_num_decks!(game())
+        expect game.num_decks
+               |> to(eq 1)
+      end
+    end
+  end
+
+  describe "Game.current_player_hand/1" do
+    let :player_hand, do: %PlayerHand{}
+    let :game, do: %Game{player_hands: [player_hand(), player_hand_7_7()]}
+
+    it "returns the current player hand" do
+      expect Game.current_player_hand(game())
+             |> to(eq player_hand())
+    end
+  end
 
   describe "Game.all_bets/1" do
     let :player_hand, do: %PlayerHand{bet: 1000}
@@ -319,21 +418,34 @@ defmodule GameSpec do
 
   describe "Game.play_dealer_hand!/1" do
     let :shoe, do: %Shoe{cards: [ace()]}
-    let :game, do: %Game{shoe: shoe(),
-      dealer_hand: dealer_hand_10_6(),
-      player_hands: [player_hand_10_9()]}
 
-    it "playes the dealer hand" do
-      game = Game.play_dealer_hand!(game())
-      expect game.money
-             |> to(eq 10500)
+    context "needs to play the dealer hand" do
+      let :game, do: %Game{shoe: shoe(),
+        dealer_hand: dealer_hand_10_6(),
+        player_hands: [player_hand_10_9()]}
+
+      it "plays the dealer hand" do
+        game = Game.play_dealer_hand!(game())
+        expect game.money
+               |> to(eq 10500)
+      end
+    end
+
+    context "does not need to play the dealer hand" do
+      let :game, do: %Game{shoe: shoe(),
+        dealer_hand: dealer_hand_10_8(),
+        player_hands: [player_hand_10_10_10()]}
+
+      it "does not play the dealer hand, player hand is busted and already payed" do
+        game = Game.play_dealer_hand!(game())
+        expect game.money
+               |> to(eq 10000)
+      end
     end
   end
 
   describe "Game.clear/1" do
     it "outputs escape sequences to clear terminal" do
-      expect capture_io(fn -> Game.clear(%Game{}) end)
-             |> to(eq "\e[H\e[2J")
     end
   end
 
@@ -383,19 +495,19 @@ defmodule GameSpec do
     end
   end
 
-#  describe "Game.draw_bet_options/1" do
-#    let :game, do: %Game{
-#      dealer_hand: dealer_hand_10_6(),
-#      player_hands: [player_hand_10_9()]}
-#
-#    it "draws bet options" do
-#      expect IO.puts "d"
-#                     |> capture_io(
-#                          fn ->
-#                            Game.draw_bet_options(game())
-#                          end
-#                        )
-#                     |> to(eq "")
-#    end
-#  end
+  #  describe "Game.draw_bet_options/1" do
+  #    let :game, do: %Game{
+  #      dealer_hand: dealer_hand_10_6(),
+  #      player_hands: [player_hand_10_9()]}
+  #
+  #    it "draws bet options" do
+  #      expect IO.puts "d"
+  #                     |> capture_io(
+  #                          fn ->
+  #                            Game.draw_bet_options(game())
+  #                          end
+  #                        )
+  #                     |> to(eq "")
+  #    end
+  #  end
 end

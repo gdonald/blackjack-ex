@@ -1,6 +1,6 @@
 defmodule PlayerHandSpec do
   use ESpec
-  alias Blackjack.{Card, Game, Hand, PlayerHand}
+  alias Blackjack.{Card, Game, Hand, PlayerHand, Shoe}
 
   let :game, do: %Game{}
   let :ace, do: %Card{value: 0}
@@ -35,6 +35,33 @@ defmodule PlayerHandSpec do
   let :player_hand_7_7_7, do: %PlayerHand{hand: hand_7_7_7()}
   let :player_hand_8_8_8, do: %PlayerHand{hand: hand_8_8_8()}
   let :player_hand_10_10_10, do: %PlayerHand{hand: hand_10_10_10()}
+
+  describe "PlayerHand.deal_card!/2" do
+    let :shoe, do: %Shoe{cards: [ace()]}
+    let :game, do: %Game{shoe: shoe(), player_hands: [player_hand_8_8()]}
+
+    it "returns stuff" do
+      {player_hand, game} = PlayerHand.deal_card!(player_hand_8_8(), game())
+
+      expect length(player_hand.hand.cards)
+             |> to(eq 3)
+      expect length(game.shoe.cards)
+             |> to(eq 0)
+    end
+  end
+
+  describe "PlayerHand.draw_actions/2" do
+    let :game, do: %Game{}
+
+    it "returns stuff" do
+      expect capture_io(
+               fn ->
+                 PlayerHand.draw_actions(game(), player_hand_8_8())
+               end
+             )
+             |> to(eq " (H) Hit  (S) Stand  (P) Split  (D) Double  \r\n")
+    end
+  end
 
   describe "PlayerHand.pay!/3" do
     context "payed hand" do
