@@ -232,7 +232,7 @@ defmodule Blackjack.Game do
     DealerHand.up_card_is_ace?(dealer_hand) && !Hand.is_blackjack?(player_hand.hand)
   end
 
-  def insure_hand(game) do
+  def insure_hand!(game) do
     player_hand = Game.current_player_hand(game)
     bet = player_hand.bet / 2
     player_hand = %PlayerHand{player_hand | bet: bet, played: true, payed: true, status: :lost}
@@ -271,7 +271,7 @@ defmodule Blackjack.Game do
     char = Game.get_input()
     cond do
       char == "y" ->
-        Game.insure_hand(game)
+        Game.insure_hand!(game)
         |> Game.draw_hands
         |> Game.draw_bet_options
       char == "n" ->

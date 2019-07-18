@@ -10,9 +10,11 @@ defmodule GameSpec do
   let :nine, do: %Card{value: 8}
   let :ten, do: %Card{value: 9}
 
+  let :hand_A_A, do: %Hand{cards: [ace(), ace()]}
   let :hand_A_6, do: %Hand{cards: [ace(), six()]}
   let :hand_A_10, do: %Hand{cards: [ace(), ten()]}
   let :hand_7_7, do: %Hand{cards: [seven(), seven()]}
+  let :hand_10_2, do: %Hand{cards: [ten(), two()]}
   let :hand_10_6, do: %Hand{cards: [ten(), six()]}
   let :hand_10_7, do: %Hand{cards: [ten(), seven()]}
   let :hand_10_8, do: %Hand{cards: [eight(), ten()]}
@@ -23,6 +25,7 @@ defmodule GameSpec do
 
   let :player_hand_7_7, do: %PlayerHand{hand: hand_7_7()}
   let :player_hand_A_10, do: %PlayerHand{hand: hand_A_10()}
+  let :player_hand_10_2, do: %PlayerHand{hand: hand_10_2()}
   let :player_hand_10_7, do: %PlayerHand{hand: hand_10_7()}
   let :player_hand_10_9, do: %PlayerHand{hand: hand_10_9()}
 
@@ -36,9 +39,63 @@ defmodule GameSpec do
 
   let :dealer_hand_10_2_10, do: %DealerHand{hand: hand_10_2_10(), hide_down_card: false}
 
+  describe "Game.insure_hand!/1" do
+    let :player_hand, do: %PlayerHand{hand: hand_7_7()}
+    let :game, do: %Game{player_hands: [player_hand()]}
+
+    it "returns false" do
+      [player_hand] = Game.insure_hand!(game()).player_hands
+      expect player_hand.bet
+             |> to(eq 250)
+      expect player_hand.payed
+             |> to(be_true())
+      expect player_hand.played
+             |> to(be_true())
+      expect player_hand.status
+             |> to(eq :lost)
+    end
+  end
+
+  describe "Game.needs_to_offer_insurance?/1" do
+    context "when dealer up card is an ace and player hand is not blackjack" do
+      let :dealer_hand, do: %DealerHand{hand: hand_A_6()}
+      let :player_hand, do: %PlayerHand{hand: hand_7_7()}
+
+      it "returns true" do
+        expect Game.needs_to_offer_insurance?(dealer_hand(), player_hand())
+               |> to(be_true())
+      end
+    end
+
+    context "when dealer up card is an ace and player hand is blackjack" do
+      let :dealer_hand, do: %DealerHand{hand: hand_A_A()}
+      let :player_hand, do: %PlayerHand{hand: hand_A_10()}
+
+      it "returns false" do
+        expect Game.needs_to_offer_insurance?(dealer_hand(), player_hand())
+               |> to(be_false())
+      end
+    end
+
+    context "when dealer up card is not an ace" do
+      let :dealer_hand, do: %DealerHand{hand: hand_7_7()}
+      let :player_hand, do: %PlayerHand{hand: hand_7_7()}
+
+      it "returns false" do
+        expect Game.needs_to_offer_insurance?(dealer_hand(), player_hand())
+               |> to(be_false())
+      end
+    end
+  end
+
   describe "Game.shuffle/1" do
     context "needs to shuffle" do
-      let :game, do: %Game{shoe: %Shoe{cards: []}}
+      let :game,
+          do: %Game{
+            shoe: %Shoe{
+              cards: []
+            }
+          }
 
       it "shuffles the shoe" do
         game = Game.shuffle(game())
