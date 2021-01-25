@@ -42,7 +42,7 @@ Increase your terminal font size to see the cards better:
 
 #### Status
 
-[![Build Status](https://travis-ci.org/gdonald/blackjack-ex.svg?branch=master)](https://travis-ci.org/gdonald/blackjack-ex)
+[![Elixir CI](https://github.com/gdonald/blackjack-ex/workflows/Elixir%20CI/badge.svg)](https://github.com/gdonald/blackjack-ex/actions)
 
 #### License
 
