@@ -7,10 +7,8 @@ on:
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-    - name: Install libssl
-      run: sudo apt-get install libssl1.1 
     - uses: actions/checkout@v2
     - name: Set up Elixir
       uses: actions/setup-elixir@v1
