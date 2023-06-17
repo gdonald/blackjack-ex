@@ -64,8 +64,8 @@ defmodule PlayerHandSpec do
   end
 
   describe "PlayerHand.pay!/3" do
-    context "payed hand" do
-      let :player_hand, do: %PlayerHand{payed: true}
+    context "paid hand" do
+      let :player_hand, do: %PlayerHand{paid: true}
 
       it "returns the hand" do
         expect PlayerHand.pay!(player_hand(), false, 21)
@@ -73,10 +73,10 @@ defmodule PlayerHandSpec do
       end
     end
 
-    context "unpayed, tied hands" do
+    context "unpaid, tied hands" do
       it "returns {player_hand, 0}" do
         {player_hand, money} = PlayerHand.pay!(player_hand_10_8(), 18, false)
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :push)
@@ -85,7 +85,7 @@ defmodule PlayerHandSpec do
       end
     end
 
-    context "unpayed, player has 12, dealer busted" do
+    context "unpaid, player has 12, dealer busted" do
       let :player_hand,
           do: %PlayerHand{
             hand: %Hand{
@@ -95,7 +95,7 @@ defmodule PlayerHandSpec do
 
       it "returns {player_hand, 500}" do
         {player_hand, money} = PlayerHand.pay!(player_hand_A_A(), 22, true)
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :won)
@@ -104,10 +104,10 @@ defmodule PlayerHandSpec do
       end
     end
 
-    context "unpayed, player has blackjack, dealer has 20" do
+    context "unpaid, player has blackjack, dealer has 20" do
       it "returns {player_hand, 750}" do
         {player_hand, money} = PlayerHand.pay!(player_hand_A_10(), 20, false)
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :won)
@@ -116,10 +116,10 @@ defmodule PlayerHandSpec do
       end
     end
 
-    context "unpayed, player has 20, dealer has 19" do
+    context "unpaid, player has 20, dealer has 19" do
       it "returns {player_hand, 500}" do
         {player_hand, money} = PlayerHand.pay!(player_hand_10_10(), 19, false)
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :won)
@@ -128,10 +128,10 @@ defmodule PlayerHandSpec do
       end
     end
 
-    context "unpayed, player has 18, dealer has 20" do
+    context "unpaid, player has 18, dealer has 20" do
       it "returns {player_hand, -500}" do
         {player_hand, money} = PlayerHand.pay!(player_hand_10_8(), 20, false)
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :lost)
@@ -228,7 +228,7 @@ defmodule PlayerHandSpec do
     context "busted hand" do
       it "returns updated player_hand and game" do
         expect {player_hand, game} = PlayerHand.handle_busted_hand!(player_hand_8_8_8(), game())
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_true())
         expect player_hand.status
                |> to(eq :lost)
@@ -240,7 +240,7 @@ defmodule PlayerHandSpec do
     context "not busted hand" do
       it "returns updated player_hand and game" do
         expect {player_hand, game} = PlayerHand.handle_busted_hand!(player_hand_8_8(), game())
-        expect player_hand.payed
+        expect player_hand.paid
                |> to(be_false())
         expect player_hand.status
                |> to(eq :unknown)

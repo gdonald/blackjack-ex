@@ -29,8 +29,8 @@ defmodule GameSpec do
   let :player_hand_10_7, do: %PlayerHand{hand: hand_10_7()}
   let :player_hand_10_9, do: %PlayerHand{hand: hand_10_9()}
 
-  let :player_hand_10_2_10, do: %PlayerHand{hand: hand_10_2_10(), payed: true}
-  let :player_hand_10_10_10, do: %PlayerHand{hand: hand_10_10_10(), payed: true}
+  let :player_hand_10_2_10, do: %PlayerHand{hand: hand_10_2_10(), paid: true}
+  let :player_hand_10_10_10, do: %PlayerHand{hand: hand_10_10_10(), paid: true}
 
   let :dealer_hand_A_6, do: %DealerHand{hand: hand_A_6(), hide_down_card: false}
   let :dealer_hand_10_8, do: %DealerHand{hand: hand_10_8(), hide_down_card: false}
@@ -47,7 +47,7 @@ defmodule GameSpec do
       [player_hand] = Game.insure_hand!(game()).player_hands
       expect player_hand.bet
              |> to(eq 250)
-      expect player_hand.payed
+      expect player_hand.paid
              |> to(be_true())
       expect player_hand.played
              |> to(be_true())
@@ -493,7 +493,7 @@ defmodule GameSpec do
         dealer_hand: dealer_hand_10_8(),
         player_hands: [player_hand_10_10_10()]}
 
-      it "does not play the dealer hand, player hand is busted and already payed" do
+      it "does not play the dealer hand, player hand is busted and already paid" do
         game = Game.play_dealer_hand!(game())
         expect game.money
                |> to(eq 10000)

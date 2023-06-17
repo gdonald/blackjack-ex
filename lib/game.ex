@@ -235,7 +235,7 @@ defmodule Blackjack.Game do
   def insure_hand!(game) do
     player_hand = Game.current_player_hand(game)
     bet = player_hand.bet / 2
-    player_hand = %PlayerHand{player_hand | bet: bet, played: true, payed: true, status: :lost}
+    player_hand = %PlayerHand{player_hand | bet: bet, played: true, paid: true, status: :lost}
 
     money = game.money - player_hand.bet
     game = Game.update_current_player_hand!(game, player_hand)
