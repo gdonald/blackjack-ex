@@ -4,8 +4,8 @@ defmodule Blackjack.MixProject do
   def project do
     [
       app: :blackjack,
-      version: "0.1.0",
-      elixir: "~> 1.8",
+      version: "0.1.1",
+      elixir: "~> 1.15.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: escript(),
@@ -22,8 +22,8 @@ defmodule Blackjack.MixProject do
 
   defp deps do
     [
-      {:espec, "~> 1.7.0", only: :test},
-      {:excoveralls, "~> 0.10", only: :test}
+      {:espec, "~> 1.9.0", only: :test},
+      {:excoveralls, "~> 0.18.0", only: :test}
     ]
   end
 
