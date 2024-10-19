@@ -38,7 +38,8 @@ mix escript.build
 
 Increase your terminal font size to see the cards better:
 
-![Blackjack](https://raw.githubusercontent.com/gdonald/blackjack-ex/master/bj.png)
+![Blackjack](https://raw.githubusercontent.com/gdonald/blackjack-ex/master/ss1.png)
+![Blackjack](https://raw.githubusercontent.com/gdonald/blackjack-ex/master/ss2.png)
 
 ## Status
 
@@ -54,6 +55,7 @@ I've written Blackjack in several other languages:
 
 - [Ruby](https://github.com/gdonald/console-blackjack-ruby)
 - [Rust](https://github.com/gdonald/console-blackjack-rust)
+- [Zig](https://github.com/gdonald/blackjack-zig)
 - [Typescript](https://github.com/gdonald/blackjack-js)
 - [Raku](https://github.com/gdonald/Console-Blackjack)
 - [Perl](https://github.com/gdonald/console-blackjack-perl)
