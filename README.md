@@ -14,14 +14,6 @@ mix deps.get
 mix espec
 ```
 
-## Run specs with code coverage
-
-```
-mix coveralls.html
-```
-
-Results will be in ./cover
-
 ## Build
 
 ```
