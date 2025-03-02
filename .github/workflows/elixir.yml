@@ -4,21 +4,17 @@
 # documentation.
 
 name: Elixir CI
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 permissions:
   contents: read
-
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04 # Changed from ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Elixir
