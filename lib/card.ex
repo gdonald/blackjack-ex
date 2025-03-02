@@ -21,7 +21,6 @@ defmodule Blackjack.Card do
   end
 
   def one_or_eleven(count_method, value, total) do
-    if count_method == :soft && value == 1 && total < 11,
-       do: 11, else: value
+    if count_method == :soft && value == 1 && total < 11, do: 11, else: value
   end
 end

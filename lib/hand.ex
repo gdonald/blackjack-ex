@@ -8,8 +8,9 @@ defmodule Blackjack.Hand do
       false
     else
       [card_1, card_2] = hand.cards
-      if Card.is_ace?(card_1) && Card.is_ten?(card_2)
-         || Card.is_ace?(card_2) && Card.is_ten?(card_1) do
+
+      if (Card.is_ace?(card_1) && Card.is_ten?(card_2)) ||
+           (Card.is_ace?(card_2) && Card.is_ten?(card_1)) do
         true
       else
         false
