@@ -10,27 +10,58 @@ defmodule Blackjack.Game do
             min_bet: 500,
             max_bet: 10_000_000,
             save_file: "bj.txt",
-            deck_type: 1
+            deck_type: 1,
+            face_type: 1
 
   alias Blackjack.{DealerHand, Game, Hand, PlayerHand, Shoe}
 
   def run(_args \\ []) do
-    Port.open({:fd, 0, 1}, [:binary, :eof, {:line, 1024}])
+    %Game{} = game = Game.load_game!(%Game{})
+    shoe = Game.create_shoe_by_type(game.deck_type, game.num_decks)
 
-    game = Game.load_game!(%Game{})
-    shoe = Shoe.new_regular(game.num_decks)
-
-    %Game{game | shoe: shoe}
+    %{game | shoe: shoe}
     |> Game.deal_new_hand()
   end
 
-  def get_input do
-    receive do
-      {_port, {:data, {:eol, data}}} ->
-        data
+  def create_shoe_by_type(deck_type, num_decks) do
+    case deck_type do
+      1 -> Shoe.new_regular(num_decks)
+      2 -> Shoe.new_aces(num_decks)
+      3 -> Shoe.new_jacks(num_decks)
+      4 -> Shoe.new_aces_jacks(num_decks)
+      5 -> Shoe.new_sevens(num_decks)
+      6 -> Shoe.new_eights(num_decks)
+      _ -> Shoe.new_regular(num_decks)
+    end
+  end
 
-      {_port, {:data, data}} ->
-        data
+  def get_input do
+    case IO.getn("", 1) do
+      :eof ->
+        ""
+
+      "\r" ->
+        IO.write("\r\n")
+        "\n"
+
+      "\e" ->
+        # Potential escape sequence for arrow keys
+        case IO.getn("", 2) do
+          "[A" ->
+            IO.write("\e[A")
+            "\e[A"
+
+          "[B" ->
+            IO.write("\e[B")
+            "\e[B"
+
+          _ ->
+            "\e"
+        end
+
+      char ->
+        IO.write(char)
+        String.downcase(char)
     end
   end
 
@@ -45,9 +76,9 @@ defmodule Blackjack.Game do
     Enum.at(game.player_hands, game.current_player_hand_index)
   end
 
-  def update_current_player_hand!(game, player_hand) do
+  def update_current_player_hand!(%Game{} = game, player_hand) do
     player_hands = List.replace_at(game.player_hands, game.current_player_hand_index, player_hand)
-    %Game{game | player_hands: player_hands}
+    %{game | player_hands: player_hands}
   end
 
   def all_bets(game) do
@@ -79,15 +110,15 @@ defmodule Blackjack.Game do
     |> length > 0
   end
 
-  def normalize_current_bet!(game) do
+  def normalize_current_bet!(%Game{} = game) do
     if game.current_bet < game.min_bet do
-      %Game{game | current_bet: game.min_bet}
+      %{game | current_bet: game.min_bet}
     else
       if game.current_bet > game.max_bet do
-        %Game{game | current_bet: game.max_bet}
+        %{game | current_bet: game.max_bet}
       else
         if game.current_bet > game.money do
-          %Game{game | current_bet: game.money}
+          %{game | current_bet: game.money}
         else
           game
         end
@@ -95,24 +126,24 @@ defmodule Blackjack.Game do
     end
   end
 
-  def normalize_num_decks!(game) do
+  def normalize_num_decks!(%Game{} = game) do
     if game.num_decks < 1 do
-      %Game{game | num_decks: 1}
+      %{game | num_decks: 1}
     else
       if game.num_decks > 8 do
-        %Game{game | num_decks: 8}
+        %{game | num_decks: 8}
       else
         game
       end
     end
   end
 
-  def normalize_deck_type!(game) do
+  def normalize_deck_type!(%Game{} = game) do
     if game.deck_type < 1 do
-      %Game{game | deck_type: 1}
+      %{game | deck_type: 1}
     else
       if game.deck_type > 6 do
-        %Game{game | deck_type: 1}
+        %{game | deck_type: 1}
       else
         game
       end
@@ -120,43 +151,47 @@ defmodule Blackjack.Game do
   end
 
   def save_game!(game) do
-    data = "#{game.num_decks}|#{game.money}|#{game.current_bet}"
+    data =
+      "#{game.num_decks}|#{game.money}|#{game.current_bet}|#{game.face_type}|#{game.deck_type}"
+
     File.write(game.save_file, data)
     game
   end
 
-  def load_game!(game) do
+  def load_game!(%Game{} = game) do
     try do
       case File.read(game.save_file) do
         {:ok, content} ->
           parts = String.split(content, "|")
 
           if length(parts) >= 3 do
-            [num_decks, money, current_bet] = parts
+            parsed_num_decks = safe_parse_integer(Enum.at(parts, 0), 1)
+            parsed_money = safe_parse_integer(Enum.at(parts, 1), 10000)
+            parsed_current_bet = safe_parse_integer(Enum.at(parts, 2), 500)
+            parsed_face_type = safe_parse_integer(Enum.at(parts, 3, "1"), 1)
+            parsed_deck_type = safe_parse_integer(Enum.at(parts, 4, "1"), 1)
 
-            parsed_num_decks = safe_parse_integer(num_decks, 1)
-            parsed_money = safe_parse_integer(money, 10000)
-            parsed_current_bet = safe_parse_integer(current_bet, 500)
-
-            %Game{
+            %{
               game
               | num_decks: parsed_num_decks,
                 money: parsed_money,
-                current_bet: parsed_current_bet
+                current_bet: parsed_current_bet,
+                face_type: parsed_face_type,
+                deck_type: parsed_deck_type
             }
           else
             IO.puts("Save file format is incorrect. Starting a new game.")
-            %Game{game | num_decks: 1, money: 1000, current_bet: 10}
+            %{game | num_decks: 1, money: 10000, current_bet: 500}
           end
 
         {:error, _reason} ->
           IO.puts("No save file found. Starting a new game.")
-          %Game{game | num_decks: 1, money: 1000, current_bet: 10}
+          %{game | num_decks: 1, money: 10000, current_bet: 500}
       end
     rescue
       e ->
         IO.puts("Error loading save file: #{inspect(e)}. Starting a new game.")
-        %Game{game | num_decks: 1, money: 1000, current_bet: 10}
+        %{game | num_decks: 1, money: 10000, current_bet: 500}
     end
   end
 
@@ -176,7 +211,7 @@ defmodule Blackjack.Game do
     end
   end
 
-  def pay_player_hands!(game) do
+  def pay_player_hands!(%Game{} = game) do
     dhv = DealerHand.get_value(game.dealer_hand, :soft)
     dhb = DealerHand.is_busted?(game.dealer_hand)
 
@@ -207,16 +242,17 @@ defmodule Blackjack.Game do
         end
       )
 
-    %Game{game | money: game.money + money, player_hands: player_hands}
+    %{game | money: game.money + money, player_hands: player_hands}
     |> Game.normalize_current_bet!()
     |> Game.save_game!()
   end
 
-  def unhide_dealer_down_card!(game) do
+  def unhide_dealer_down_card!(%Game{} = game) do
     if Hand.is_blackjack?(game.dealer_hand.hand) ||
          Game.needs_to_play_dealer_hand?(game) do
-      dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
-      %Game{game | dealer_hand: dealer_hand}
+      %DealerHand{} = current_dealer_hand = game.dealer_hand
+      dealer_hand = %{current_dealer_hand | hide_down_card: false}
+      %{game | dealer_hand: dealer_hand}
     else
       game
     end
@@ -246,7 +282,7 @@ defmodule Blackjack.Game do
   end
 
   def to_s(game) do
-    dh = DealerHand.to_s(game.dealer_hand)
+    dh = DealerHand.to_s(game.dealer_hand, game.face_type)
 
     phs =
       Enum.with_index(game.player_hands)
@@ -259,7 +295,7 @@ defmodule Blackjack.Game do
 
     money = Game.format_money(game.money / 100.0)
 
-    "\r\n Dealer:\r\n#{dh}\r\n\r\n Player $#{money}:\r\n#{phs}\r\n"
+    "\r\n Dealer:\r\n#{dh}\r\n\r\n Player $#{money}:\r\n#{phs}"
   end
 
   def draw_hands(game) do
@@ -276,10 +312,10 @@ defmodule Blackjack.Game do
     |> to_string()
   end
 
-  def shuffle(game) do
+  def shuffle(%Game{} = game) do
     if Shoe.needs_to_shuffle?(game.shoe, game) do
-      shoe = Shoe.new_regular(game.num_decks)
-      %Game{game | shoe: shoe}
+      shoe = Game.create_shoe_by_type(game.deck_type, game.num_decks)
+      %{game | shoe: shoe}
     else
       game
     end
@@ -289,22 +325,23 @@ defmodule Blackjack.Game do
     DealerHand.up_card_is_ace?(dealer_hand) && !Hand.is_blackjack?(player_hand.hand)
   end
 
-  def insure_hand!(game) do
-    player_hand = Game.current_player_hand(game)
+  def insure_hand!(%Game{} = game) do
+    %PlayerHand{} = player_hand = Game.current_player_hand(game)
     bet = player_hand.bet / 2
-    player_hand = %PlayerHand{player_hand | bet: bet, played: true, paid: true, status: :lost}
+    player_hand = %{player_hand | bet: bet, played: true, paid: true, status: :lost}
 
     money = game.money - player_hand.bet
     game = Game.update_current_player_hand!(game, player_hand)
 
-    %Game{game | money: money}
+    %{game | money: money}
   end
 
-  def no_insurance(game) do
+  def no_insurance(%Game{} = game) do
     if Hand.is_blackjack?(game.dealer_hand.hand) do
-      dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+      %DealerHand{} = current_dealer_hand = game.dealer_hand
+      dealer_hand = %{current_dealer_hand | hide_down_card: false}
 
-      %Game{game | dealer_hand: dealer_hand}
+      %{game | dealer_hand: dealer_hand}
       |> Game.pay_player_hands!()
       |> Game.draw_hands()
       |> Game.draw_bet_options()
@@ -344,26 +381,26 @@ defmodule Blackjack.Game do
     end
   end
 
-  def deal_new_hand(game) do
-    game = Game.shuffle(game)
+  def deal_new_hand(%Game{} = game) do
+    %Game{} = game = Game.shuffle(game)
     shoe = game.shoe
 
     player_hand = %PlayerHand{hand: %Hand{}, bet: game.current_bet}
     dealer_hand = %DealerHand{hand: %Hand{}}
 
     {hand, shoe} = Hand.deal_card!(player_hand.hand, shoe)
-    player_hand = %PlayerHand{player_hand | hand: hand}
+    player_hand = %{player_hand | hand: hand}
 
     {hand, shoe} = Hand.deal_card!(dealer_hand.hand, shoe)
-    dealer_hand = %DealerHand{dealer_hand | hand: hand}
+    dealer_hand = %{dealer_hand | hand: hand}
 
     {hand, shoe} = Hand.deal_card!(player_hand.hand, shoe)
-    player_hand = %PlayerHand{player_hand | hand: hand}
+    player_hand = %{player_hand | hand: hand}
 
     {hand, shoe} = Hand.deal_card!(dealer_hand.hand, shoe)
-    dealer_hand = %DealerHand{dealer_hand | hand: hand}
+    dealer_hand = %{dealer_hand | hand: hand}
 
-    game = %Game{
+    game = %{
       game
       | shoe: shoe,
         dealer_hand: dealer_hand,
@@ -378,9 +415,10 @@ defmodule Blackjack.Game do
       {is_done, player_hand, game} = PlayerHand.is_done?(player_hand, game)
 
       if is_done do
-        dealer_hand = %DealerHand{game.dealer_hand | hide_down_card: false}
+        %DealerHand{} = current_dealer_hand = game.dealer_hand
+        dealer_hand = %{current_dealer_hand | hide_down_card: false}
 
-        %Game{game | dealer_hand: dealer_hand}
+        %{game | dealer_hand: dealer_hand}
         |> Game.pay_player_hands!()
         |> Game.draw_hands()
         |> Game.draw_bet_options()
@@ -421,7 +459,7 @@ defmodule Blackjack.Game do
     Game.clear(game)
     |> Game.draw_hands()
 
-    IO.write(" (N) Number of Decks  (T) Deck Type  (B) Back\r\n")
+    IO.write(" (N) Number of Decks  (T) Deck Type  (F) Face Type  (B) Back\r\n")
 
     char = Game.get_input()
 
@@ -431,6 +469,9 @@ defmodule Blackjack.Game do
 
       char == "t" ->
         Game.get_new_shoe(game)
+
+      char == "f" ->
+        Game.get_new_face_type(game)
 
       char == "b" ->
         Game.clear(game)
@@ -454,33 +495,34 @@ defmodule Blackjack.Game do
 
     cond do
       input == "1" ->
-        Shoe.new_regular(game.num_decks)
+        {Shoe.new_regular(game.num_decks), 1}
 
       input == "2" ->
-        Shoe.new_aces(game.num_decks)
+        {Shoe.new_aces(game.num_decks), 2}
 
       input == "3" ->
-        Shoe.new_jacks(game.num_decks)
+        {Shoe.new_jacks(game.num_decks), 3}
 
       input == "4" ->
-        Shoe.new_aces_jacks(game.num_decks)
+        {Shoe.new_aces_jacks(game.num_decks), 4}
 
       input == "5" ->
-        Shoe.new_sevens(game.num_decks)
+        {Shoe.new_sevens(game.num_decks), 5}
 
       input == "6" ->
-        Shoe.new_eights(game.num_decks)
+        {Shoe.new_eights(game.num_decks), 6}
 
       true ->
         Game.get_shoe(game)
     end
   end
 
-  def get_new_shoe(game) do
-    shoe = Game.get_shoe(game)
+  def get_new_shoe(%Game{} = game) do
+    {shoe, deck_type} = Game.get_shoe(game)
 
-    %Game{game | shoe: shoe}
+    %{game | shoe: shoe, deck_type: deck_type}
     |> Game.normalize_deck_type!()
+    |> Game.save_game!()
     |> Game.draw_game_options()
   end
 
@@ -502,21 +544,22 @@ defmodule Blackjack.Game do
     end
   end
 
-  def get_new_num_decks(game) do
+  def get_new_num_decks(%Game{} = game) do
     decks = Game.get_num_decks(game)
 
-    game =
-      %Game{game | num_decks: decks}
+    %Game{} =
+      game =
+      %{game | num_decks: decks}
       |> Game.normalize_num_decks!()
       |> Game.save_game!()
 
-    shoe = Shoe.new_regular(game.num_decks)
+    shoe = Game.create_shoe_by_type(game.deck_type, game.num_decks)
 
-    %Game{game | shoe: shoe}
+    %{game | shoe: shoe}
     |> Game.draw_game_options()
   end
 
-  def get_bet(game) do
+  def get_bet(%Game{} = game) do
     Game.clear(game)
     |> Game.draw_hands()
 
@@ -527,12 +570,12 @@ defmodule Blackjack.Game do
 
     cond do
       input == "\e[A" || input == "u" ->
-        %Game{game | current_bet: game.current_bet + 100}
+        %{game | current_bet: game.current_bet + 100}
         |> Game.normalize_current_bet!()
         |> Game.get_bet()
 
       input == "\e[B" || input == "d" ->
-        %Game{game | current_bet: game.current_bet - 100}
+        %{game | current_bet: game.current_bet - 100}
         |> Game.normalize_current_bet!()
         |> Game.get_bet()
 
@@ -550,8 +593,8 @@ defmodule Blackjack.Game do
     |> Game.deal_new_hand()
   end
 
-  def play_more_hands!(game) do
-    game = %Game{game | current_player_hand_index: game.current_player_hand_index + 1}
+  def play_more_hands!(%Game{} = game) do
+    game = %{game | current_player_hand_index: game.current_player_hand_index + 1}
     player_hand = Game.current_player_hand(game)
     {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
 
@@ -565,7 +608,37 @@ defmodule Blackjack.Game do
     end
   end
 
-  def split_current_hand(game) do
+  def get_face_type(game) do
+    Game.clear(game)
+    |> Game.draw_hands()
+
+    IO.write(" (1) 🂡  (2) A♠\r\n")
+
+    input = Game.get_input()
+
+    cond do
+      input == "1" ->
+        1
+
+      input == "2" ->
+        2
+
+      true ->
+        Game.get_face_type(game)
+    end
+  end
+
+  def get_new_face_type(game) do
+    face_type = Game.get_face_type(game)
+
+    %Game{} = game = %{game | face_type: face_type}
+
+    game
+    |> Game.save_game!()
+    |> Game.draw_game_options()
+  end
+
+  def split_current_hand(%Game{} = game) do
     current_hand = Game.current_player_hand(game)
 
     if PlayerHand.can_split?(current_hand, game) do
@@ -574,28 +647,28 @@ defmodule Blackjack.Game do
       player_hands =
         List.insert_at(game.player_hands, game.current_player_hand_index + 1, player_hand)
 
-      game = %Game{game | player_hands: player_hands}
+      game = %{game | player_hands: player_hands}
 
       this_player_hand = Enum.at(game.player_hands, game.current_player_hand_index)
       split_player_hand = Enum.at(game.player_hands, game.current_player_hand_index + 1)
 
       {card, cards} = List.pop_at(this_player_hand.hand.cards, 1)
 
-      this_hand = %Hand{this_player_hand.hand | cards: cards}
-      this_player_hand = %PlayerHand{this_player_hand | hand: this_hand}
+      this_hand = %{this_player_hand.hand | cards: cards}
+      this_player_hand = %{this_player_hand | hand: this_hand}
 
       player_hands =
         List.replace_at(game.player_hands, game.current_player_hand_index, this_player_hand)
 
-      game = %Game{game | player_hands: player_hands}
+      game = %{game | player_hands: player_hands}
 
-      split_hand = %Hand{split_player_hand.hand | cards: [card]}
-      split_player_hand = %PlayerHand{split_player_hand | hand: split_hand}
+      split_hand = %{split_player_hand.hand | cards: [card]}
+      split_player_hand = %{split_player_hand | hand: split_hand}
 
       player_hands =
         List.replace_at(game.player_hands, game.current_player_hand_index + 1, split_player_hand)
 
-      game = %Game{game | player_hands: player_hands}
+      game = %{game | player_hands: player_hands}
 
       player_hand = Game.current_player_hand(game)
       {player_hand, game} = PlayerHand.deal_card!(player_hand, game)

@@ -4,12 +4,11 @@ defmodule Blackjack.MixProject do
   def project do
     [
       app: :blackjack,
-      version: "0.1.1",
-      elixir: "~> 1.17",
+      version: "0.1.2",
+      elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      escript: escript(),
-      preferred_cli_env: [espec: :test]
+      escript: escript()
     ]
   end
 
@@ -20,15 +19,13 @@ defmodule Blackjack.MixProject do
   end
 
   defp deps do
-    [
-      {:espec, "~> 1.9.2", only: :test}
-    ]
+    []
   end
 
   defp escript do
     [
       main_module: Blackjack,
-      emu_args: "-noinput -elixir ansi_enabled true"
+      emu_args: "-elixir ansi_enabled true"
     ]
   end
 end

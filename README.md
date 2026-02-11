@@ -2,16 +2,21 @@
 
 *Console Blackjack in Elixir*
 
+## Requirements
+
+- Elixir 1.19+
+- Erlang/OTP 28+
+
 ## Install dependencies
 
 ```
 mix deps.get
 ```
 
-## Run specs
+## Run tests
 
 ```
-mix espec
+mix test
 ```
 
 ## Build
@@ -23,7 +28,7 @@ mix escript.build
 ## Run
 
 ```
-./blackjack
+./blackjack.sh
 ```
 
 ## Terminal

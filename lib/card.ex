@@ -3,8 +3,8 @@ defmodule Blackjack.Card do
 
   alias Blackjack.Face
 
-  def to_s(card) do
-    Face.value(card)
+  def to_s(card, face_type \\ 1) do
+    Face.value(card, face_type)
   end
 
   def is_ace?(card) do

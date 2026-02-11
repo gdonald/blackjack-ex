@@ -25,10 +25,10 @@ defmodule Blackjack.PlayerHand do
       21 == PlayerHand.get_value(player_hand, :hard)
   end
 
-  def handle_busted_hand!(player_hand, game) do
+  def handle_busted_hand!(%PlayerHand{} = player_hand, game) do
     if PlayerHand.is_busted?(player_hand) do
-      player_hand = %PlayerHand{player_hand | paid: true, status: :lost}
-      game = %Game{game | money: game.money - player_hand.bet}
+      player_hand = %{player_hand | paid: true, status: :lost}
+      game = %{game | money: game.money - player_hand.bet}
       game = Game.update_current_player_hand!(game, player_hand)
       {player_hand, game}
     else
@@ -36,9 +36,9 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def is_done?(player_hand, game) do
+  def is_done?(%PlayerHand{} = player_hand, game) do
     if PlayerHand.is_played?(player_hand) do
-      player_hand = %PlayerHand{player_hand | played: true}
+      player_hand = %{player_hand | played: true}
       game = Game.update_current_player_hand!(game, player_hand)
       {player_hand, game} = PlayerHand.handle_busted_hand!(player_hand, game)
       {true, player_hand, game}
@@ -103,7 +103,7 @@ defmodule Blackjack.PlayerHand do
       Enum.map(
         player_hand.hand.cards,
         fn card ->
-          Card.to_s(card)
+          Card.to_s(card, game.face_type)
         end
       )
       |> Enum.join(" ")
@@ -114,7 +114,7 @@ defmodule Blackjack.PlayerHand do
     arrow = PlayerHand.get_arrow(player_hand, index, game)
     status = PlayerHand.get_status(player_hand)
 
-    " #{cards} ⇒  #{value}  #{sign}#{bet}#{arrow}  #{status}\r\n"
+    " #{cards} ⇒  #{value}  #{sign}#{bet}#{arrow}  #{status}\r\n\r\n"
   end
 
   def can_split?(player_hand, game) do
@@ -160,7 +160,7 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def pay!(player_hand, dhv, dhb) do
+  def pay!(%PlayerHand{} = player_hand, dhv, dhb) do
     if player_hand.paid do
       {player_hand, 0}
     else
@@ -168,12 +168,12 @@ defmodule Blackjack.PlayerHand do
 
       if dhb || phv > dhv do
         bet = PlayerHand.promoted_bet(player_hand)
-        {%PlayerHand{player_hand | paid: true, status: :won, bet: bet}, bet}
+        {%{player_hand | paid: true, status: :won, bet: bet}, bet}
       else
         if phv < dhv do
-          {%PlayerHand{player_hand | paid: true, status: :lost}, -player_hand.bet}
+          {%{player_hand | paid: true, status: :lost}, -player_hand.bet}
         else
-          {%PlayerHand{player_hand | paid: true, status: :push}, 0}
+          {%{player_hand | paid: true, status: :push}, 0}
         end
       end
     end
@@ -223,11 +223,11 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def deal_card!(player_hand, game) do
+  def deal_card!(%PlayerHand{} = player_hand, game) do
     {hand, shoe} = Hand.deal_card!(player_hand.hand, game.shoe)
-    player_hand = %PlayerHand{player_hand | hand: hand}
+    player_hand = %{player_hand | hand: hand}
     game = Game.update_current_player_hand!(game, player_hand)
-    {player_hand, %Game{game | shoe: shoe}}
+    {player_hand, %{game | shoe: shoe}}
   end
 
   def hit!(player_hand, game) do
@@ -242,8 +242,8 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def stand!(player_hand, game) do
-    player_hand = %PlayerHand{player_hand | stood: true, played: true}
+  def stand!(%PlayerHand{} = player_hand, game) do
+    player_hand = %{player_hand | stood: true, played: true}
     game = Game.update_current_player_hand!(game, player_hand)
 
     if Game.more_hands_to_play?(game) do
@@ -255,11 +255,11 @@ defmodule Blackjack.PlayerHand do
     end
   end
 
-  def double!(player_hand, game) do
+  def double!(%PlayerHand{} = player_hand, game) do
     {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
 
     bet = player_hand.bet * 2
-    player_hand = %PlayerHand{player_hand | played: true, bet: bet}
+    player_hand = %{player_hand | played: true, bet: bet}
 
     game = Game.update_current_player_hand!(game, player_hand)
     {is_done, _player_hand, game} = PlayerHand.is_done?(player_hand, game)
