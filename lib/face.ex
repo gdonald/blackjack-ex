@@ -37,14 +37,14 @@ defmodule Blackjack.Face do
     ]
   end
 
-  def value(card, face_type \\ 1) do
+  def value(card, face_type) do
     values_fn = if face_type == 2, do: &values2/0, else: &values/0
     values_fn.()
     |> Enum.at(card.value)
     |> Enum.at(card.suit_value)
   end
 
-  def card_back(face_type \\ 1) do
+  def card_back(face_type) do
     values_fn = if face_type == 2, do: &values2/0, else: &values/0
     values_fn.()
     |> Enum.at(13)

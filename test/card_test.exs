@@ -5,12 +5,12 @@ defmodule CardTest do
   describe "Card.to_s/1" do
     test "returns an Ace of Spades" do
       ace = %Card{value: 0}
-      assert Card.to_s(ace) == "🂡"
+      assert Card.to_s(ace, 1) == "🂡"
     end
 
     test "returns a card back" do
       card = %Card{value: 13, suit_value: 0}
-      assert Card.to_s(card) == "🂠"
+      assert Card.to_s(card, 1) == "🂠"
     end
   end
 

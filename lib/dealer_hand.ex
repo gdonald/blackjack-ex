@@ -29,13 +29,13 @@ defmodule Blackjack.DealerHand do
     Card.is_ace?(first)
   end
 
-  def card_face(dealer_hand, index, card, face_type \\ 1) do
+  def card_face(dealer_hand, index, card, face_type) do
     if dealer_hand.hide_down_card && index == 1,
       do: Face.card_back(face_type),
       else: Card.to_s(card, face_type)
   end
 
-  def to_s(dealer_hand, face_type \\ 1) do
+  def to_s(dealer_hand, face_type) do
     cards =
       Enum.with_index(dealer_hand.hand.cards)
       |> Enum.map(fn {card, index} ->

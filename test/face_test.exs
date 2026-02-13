@@ -5,18 +5,18 @@ defmodule FaceTest do
   describe "Face.value/1" do
     test "returns an Ace of Spades" do
       card = %Card{value: 0}
-      assert Face.value(card) == "🂡"
+      assert Face.value(card, 1) == "🂡"
     end
 
     test "returns a card back" do
       card = %Card{value: 13}
-      assert Face.value(card) == "🂠"
+      assert Face.value(card, 1) == "🂠"
     end
   end
 
   describe "Face.card_back/0" do
     test "returns a card back" do
-      assert Face.card_back() == "🂠"
+      assert Face.card_back(1) == "🂠"
     end
   end
 end

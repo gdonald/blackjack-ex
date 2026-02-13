@@ -140,28 +140,28 @@ defmodule DealerHandTest do
       ten = %Card{value: 9}
       dealer_hand = %DealerHand{hide_down_card: true}
 
-      assert DealerHand.card_face(dealer_hand, 0, ten) == "🂪"
+      assert DealerHand.card_face(dealer_hand, 0, ten, 1) == "🂪"
     end
 
     test "down card is hidden - returns card back for second card" do
       ten = %Card{value: 9}
       dealer_hand = %DealerHand{hide_down_card: true}
 
-      assert DealerHand.card_face(dealer_hand, 1, ten) == "🂠"
+      assert DealerHand.card_face(dealer_hand, 1, ten, 1) == "🂠"
     end
 
     test "down card is visible - returns face for first card" do
       ten = %Card{value: 9}
       dealer_hand = %DealerHand{hide_down_card: false}
 
-      assert DealerHand.card_face(dealer_hand, 0, ten) == "🂪"
+      assert DealerHand.card_face(dealer_hand, 0, ten, 1) == "🂪"
     end
 
     test "down card is visible - returns face for second card" do
       ten = %Card{value: 9}
       dealer_hand = %DealerHand{hide_down_card: false}
 
-      assert DealerHand.card_face(dealer_hand, 1, ten) == "🂪"
+      assert DealerHand.card_face(dealer_hand, 1, ten, 1) == "🂪"
     end
   end
 
@@ -172,7 +172,7 @@ defmodule DealerHandTest do
       hand = %Hand{cards: [ten, ace]}
       dealer_hand = %DealerHand{hand: hand, hide_down_card: true}
 
-      assert DealerHand.to_s(dealer_hand) == " 🂪 🂠 ⇒  10"
+      assert DealerHand.to_s(dealer_hand, 1) == " 🂪 🂠 ⇒  10"
     end
 
     test "down card is visible - returns face for second card" do
@@ -181,7 +181,7 @@ defmodule DealerHandTest do
       hand = %Hand{cards: [ten, ace]}
       dealer_hand = %DealerHand{hand: hand, hide_down_card: false}
 
-      assert DealerHand.to_s(dealer_hand) == " 🂪 🂡 ⇒  21"
+      assert DealerHand.to_s(dealer_hand, 1) == " 🂪 🂡 ⇒  21"
     end
   end
 
