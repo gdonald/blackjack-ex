@@ -256,18 +256,23 @@ defmodule Blackjack.PlayerHand do
   end
 
   def double!(%PlayerHand{} = player_hand, game) do
-    {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
+    if PlayerHand.can_double?(player_hand, game) do
+      {player_hand, game} = PlayerHand.deal_card!(player_hand, game)
 
-    bet = player_hand.bet * 2
-    player_hand = %{player_hand | played: true, bet: bet}
+      bet = player_hand.bet * 2
+      player_hand = %{player_hand | played: true, bet: bet}
 
-    game = Game.update_current_player_hand!(game, player_hand)
-    {is_done, _player_hand, game} = PlayerHand.is_done?(player_hand, game)
+      game = Game.update_current_player_hand!(game, player_hand)
+      {is_done, _player_hand, game} = PlayerHand.is_done?(player_hand, game)
 
-    if is_done do
-      PlayerHand.process(game)
+      if is_done do
+        PlayerHand.process(game)
+      else
+        game
+      end
     else
-      game
+      Game.draw_hands(game)
+      |> PlayerHand.get_action(player_hand)
     end
   end
 end

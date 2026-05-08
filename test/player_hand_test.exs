@@ -1,7 +1,7 @@
 defmodule PlayerHandTest do
   use ExUnit.Case
   import ExUnit.CaptureIO
-  alias Blackjack.{Card, Game, Hand, PlayerHand, Shoe}
+  alias Blackjack.{Card, DealerHand, Game, Hand, PlayerHand, Shoe}
 
   describe "PlayerHand.deal_card!/2" do
     test "returns stuff" do
@@ -334,6 +334,45 @@ defmodule PlayerHandTest do
 
       [player_hand | _rest] = game.player_hands
       assert PlayerHand.can_double?(player_hand, game)
+    end
+  end
+
+  describe "PlayerHand.double!/2" do
+    test "refuses to act when can_double? returns false" do
+      ten = %Card{value: 9}
+      seven = %Card{value: 6}
+      player_hand = %PlayerHand{bet: 500, hand: %Hand{cards: [ten, seven]}}
+      shoe = %Shoe{cards: [ten]}
+      dealer_hand = %DealerHand{hand: %Hand{cards: [ten, seven]}, hide_down_card: false}
+
+      game = %Game{
+        money: 500,
+        shoe: shoe,
+        dealer_hand: dealer_hand,
+        player_hands: [player_hand]
+      }
+
+      refute PlayerHand.can_double?(player_hand, game),
+             "test setup invariant: can_double? must be false (money 500 < all_bets 500 + bet 500)"
+
+      test_pid = self()
+
+      capture_io("sq", fn ->
+        result = PlayerHand.double!(player_hand, game)
+        send(test_pid, {:result, result})
+      end)
+
+      assert_received {:result, result_game}
+      result_hand = Enum.at(result_game.player_hands, 0)
+
+      assert result_hand.bet == 500,
+             "double!/2 doubled the bet to #{result_hand.bet} despite can_double? being false"
+
+      assert length(result_hand.hand.cards) == 2,
+             "double!/2 dealt a card despite can_double? being false"
+
+      assert result_game.money >= 0,
+             "money went negative (#{result_game.money}) — double!/2 let the player double when broke"
     end
   end
 
